@@ -1,0 +1,25 @@
+from dateutil import parser
+
+
+def parse_iso_timestamp(iso_string: str) -> int:
+    """
+    Parse ISO 8601 timestamp string to Unix timestamp
+
+    Args:
+        iso_string: ISO 8601 format string (e.g., "2025-10-25T00:00:00+07:00")
+
+    Returns:
+        Unix timestamp (int)
+    """
+    try:
+        print(f"Parsing ISO timestamp: {iso_string}")
+        dt = parser.parse(iso_string)
+
+        unix_timestamp = int(dt.timestamp())
+
+        print(f"Parsed ISO '{iso_string}' to Unix timestamp: {unix_timestamp}")
+        return unix_timestamp
+
+    except Exception as e:
+        print(f"Error parsing ISO timestamp '{iso_string}': {e}")
+        raise ValueError(f"Invalid ISO 8601 timestamp format: {iso_string}")
