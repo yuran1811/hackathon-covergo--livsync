@@ -3,10 +3,14 @@ Random Health Data Generator
 Tạo dữ liệu sức khỏe ngẫu nhiên trong các ngưỡng cố định
 """
 
+import json
 import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
-import json
+from pathlib import Path
+from typing import Any, Dict, List
+
+SPORT_OPTIONS = ("pickleball", "swim", "running")
+
 
 class HealthDataGenerator:
     """Generator for random health data"""
@@ -36,11 +40,10 @@ class HealthDataGenerator:
                 data[key] = round(random.uniform(range_config["min"], range_config["max"]), 1)
             else:
                 data[key] = random.randint(range_config["min"], range_config["max"])
-        
+
         data["blood_pressure"] = f"{data['bp_systolic']}/{data['bp_diastolic']}"
-        
         data["timestamp"] = datetime.now().isoformat()
-        
+
         return data
     
     @classmethod
@@ -93,14 +96,105 @@ class HealthDataGenerator:
         data["blood_glucose"] = int(90 + (data["steps"] / 1000) * 5 + random.randint(-20, 20))
         
         data["blood_oxygen"] = random.randint(95, 100)
-        
+
         data["blood_pressure"] = f"{data['bp_systolic']}/{data['bp_diastolic']}"
-        
         data["timestamp"] = datetime.now().isoformat()
-        
+        data["weekly_workouts"] = _generate_weekly_workout_history()
+
         return data
 
-def generate_mock_health_data(data_type: str = "single") -> Dict[str, Any]:
+
+def _generate_weekly_workout_history(days: int = 7) -> List[Dict[str, Any]]:
+    today = datetime.now().date()
+    workouts: List[Dict[str, Any]] = []
+    calorie_burn_rate = {
+        "pickleball": 9.0,
+        "swim": 10.5,
+        "running": 11.5,
+    }
+
+    for offset in range(days):
+        day = today - timedelta(days=offset)
+        sport = random.choice(SPORT_OPTIONS)
+        duration = random.randint(30, 75)
+        burn_rate = calorie_burn_rate[sport]
+        calories = int(duration * burn_rate * random.uniform(0.85, 1.15))
+
+        workouts.append(
+            {
+                "date": day.isoformat(),
+                "sport": sport,
+                "duration_minutes": duration,
+                "calories_burned": calories,
+            }
+        )
+
+    return list(reversed(workouts))
+
+
+CACHE_FILE_PATH = Path(__file__).resolve().parent / "mock_health_data_cache.json"
+
+
+def _load_cache() -> Dict[str, Any]:
+    if not CACHE_FILE_PATH.exists():
+        return {}
+
+    try:
+        with CACHE_FILE_PATH.open("r", encoding="utf-8") as cache_file:
+            data = json.load(cache_file)
+            if isinstance(data, dict):
+                return data
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    return {}
+
+
+def _write_cache(cache: Dict[str, Any]) -> None:
+    try:
+        CACHE_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with CACHE_FILE_PATH.open("w", encoding="utf-8") as cache_file:
+            json.dump(cache, cache_file)
+    except OSError:
+        # If persisting fails we still return in-memory data.
+        pass
+
+
+def _create_mock_health_data(data_type: str) -> Any:
+    generator = HealthDataGenerator
+
+    if data_type == "single":
+        return generator.generate_single_health_data()
+    if data_type == "multiple":
+        return generator.generate_multiple_health_data(10)
+    if data_type == "trends":
+        return generator.generate_health_data_with_trends(7)
+    if data_type == "realistic":
+        return generator.generate_realistic_health_data()
+
+    return generator.generate_single_health_data()
+
+
+def get_persisted_mock_health_data(data_type: str = "realistic") -> Any:
+    cache = _load_cache()
+    cached_value = cache.get(data_type)
+
+    if cached_value is not None:
+        if data_type == "realistic" and isinstance(cached_value, dict) and "weekly_workouts" not in cached_value:
+            data = _create_mock_health_data(data_type)
+            cache[data_type] = data
+            _write_cache(cache)
+            return data
+        return cached_value
+
+    data = _create_mock_health_data(data_type)
+    cache[data_type] = data
+    _write_cache(cache)
+
+    return data
+
+
+def generate_mock_health_data(data_type: str = "single") -> Any:
     """
     
     Args:
@@ -109,18 +203,7 @@ def generate_mock_health_data(data_type: str = "single") -> Dict[str, Any]:
     Returns:
         Dict or List containing health data
     """
-    generator = HealthDataGenerator()
-    
-    if data_type == "single":
-        return generator.generate_single_health_data()
-    elif data_type == "multiple":
-        return generator.generate_multiple_health_data(10)
-    elif data_type == "trends":
-        return generator.generate_health_data_with_trends(7)
-    elif data_type == "realistic":
-        return generator.generate_realistic_health_data()
-    else:
-        return generator.generate_single_health_data()
+    return _create_mock_health_data(data_type)
 
 def test_generator():
     """Test function to test the generator"""

@@ -11,7 +11,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from app.dependencies.calendar import getTodayEvents
 from app.dependencies.supabase import supabase_client
 from app.models.health_models import HealthInsightsResponse
-from app.utils.random_health_data import generate_mock_health_data
+from app.utils.random_health_data import get_persisted_mock_health_data
 
 SYSTEM_PROMPT = """You are a health AI assistant.
 Your goal is to help users achieve their health objectives by analyzing their daily health data and schedule. 
@@ -57,7 +57,7 @@ def get_users_objectives(user_id: str):
 @tool
 def get_today_health_data():
     """Fetch the user's health data for today."""
-    mock_data = generate_mock_health_data("realistic")
+    mock_data = get_persisted_mock_health_data("realistic")
 
     return json.dumps(
         {
@@ -74,6 +74,7 @@ def get_today_health_data():
             "blood_oxygen": mock_data["blood_oxygen"],
             "blood_pressure": mock_data["blood_pressure"],
             "timestamp": mock_data["timestamp"],
+            "weekly_workouts": mock_data["weekly_workouts"],
         }
     )
 
@@ -181,7 +182,7 @@ def ai_event_day_suggestions(user_id: str) -> Any:
                 {
                     "role": "user",
                     "content": (
-                        f"My user ID is {user_id}. Review today's health objectives and calendar, then propose one supportive event in ISO 8601 format. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}"
+                        f"My user ID is {user_id}. Review today's health objectives, custom goals and calendar, then propose one supportive event in ISO 8601 format. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}"
                         "If no change is required, respond with 'No changes needed.'"
                     ),
                 }
@@ -209,7 +210,7 @@ def generate_structured_event_suggestion(user_id: str) -> EventSuggestion | str:
                 {
                     "role": "user",
                     "content": (
-                        f"My user ID is {user_id}. Review my health targets and current schedule, then propose a single event that helps me stay aligned with my goals."
+                        f"My user ID is {user_id}. Review my health targets, and current schedule, then propose a single event that helps me stay aligned with my goals."
                     ),
                 }
             ]

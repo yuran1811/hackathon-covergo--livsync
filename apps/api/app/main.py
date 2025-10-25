@@ -139,7 +139,7 @@ async def get_event_day_suggestion(user_id: str = Depends(get_current_user)):
             return {"suggestion": asdict(suggestion)}
 
         return {"suggestion": suggestion}
-    except Exception as exc:  # pragma: no cover - pass-through for HTTP error
+    except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Error generating event suggestion: {exc}"
         )
