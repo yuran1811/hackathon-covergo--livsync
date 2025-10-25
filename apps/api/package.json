@@ -1,0 +1,12 @@
+{
+  "name": "@livsync/api",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "",
+  "scripts": {
+    "postinstall": "uv sync",
+    "start": "uv run fastapi dev",
+    "build": "uv build",
+    "serve": ""
+  }
+}

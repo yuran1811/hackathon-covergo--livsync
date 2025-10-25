@@ -1,0 +1,27 @@
+name: Ansible Lint
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ansible/**'
+  pull_request:
+    paths:
+      - 'ansible/**'
+
+jobs:
+  ansible-lint:
+    name: run ansible lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - name: Run ansible-lint
+        uses: ansible/ansible-lint@main
+        with:
+          setup_python: 'true'
+          working_directory: ansible
+          requirements_file: requirements.yml

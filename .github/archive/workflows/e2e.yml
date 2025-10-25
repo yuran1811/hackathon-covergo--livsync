@@ -1,0 +1,47 @@
+name: E2E Playwright Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - e2e/web/**
+  pull_request:
+    branches: [main]
+    types:
+      - opened
+      - edited
+    paths:
+      - e2e/web/**
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        name: Install Node.js
+        with:
+          node-version: '>=22'
+          cache: pnpm
+
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - run: pnpx playwright install --with-deps
+
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

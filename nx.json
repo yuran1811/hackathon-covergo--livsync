@@ -1,0 +1,142 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "test": {
+      "cache": true,
+      "dependsOn": ["^bundle", "prisma:generate", "^prisma:generate"],
+      "inputs": ["default", "^default", "{workspaceRoot}/vitest.config.ts"],
+      "outputs": [
+        "{workspaceRoot}/coverage/**/*",
+        "{projectRoot}/coverage/**/*"
+      ]
+    },
+    "test:e2e": {
+      "cache": true,
+      "dependsOn": ["^bundle", "prisma:generate", "^prisma:generate"],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/playwright.config.ts",
+        "{projectRoot}/playwright.config.ts"
+      ],
+      "outputs": [
+        "{projectRoot}/test-results/**/*",
+        "{projectRoot}/playwright-report/**/*"
+      ]
+    },
+    "bundle": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{projectRoot}/vite.config.ts",
+        "{projectRoot}/tsconfig.*",
+        "{workspaceRoot}/tsconfig.*"
+      ],
+      "outputs": ["{projectRoot}/dist/**/*"]
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^bundle", "prisma:generate", "^prisma:generate"]
+    },
+    "build": {
+      "cache": true,
+      "dependsOn": [
+        "^bundle",
+        "build",
+        "^build",
+        "prisma:generate",
+        "^prisma:generate"
+      ],
+      "inputs": [
+        "default",
+        "^default",
+        "{projectRoot}/tsconfig.*",
+        "{projectRoot}/next.config.*",
+        "{projectRoot}/nuxt.config.ts",
+        "{workspaceRoot}/tsconfig.*"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*",
+        "{projectRoot}/.next/**/*",
+        "{projectRoot}/.nuxt/**/*",
+        "{projectRoot}/.output/**/*"
+      ]
+    },
+    "start": {
+      "cache": false,
+      "dependsOn": ["^bundle", "prisma:generate", "^prisma:generate"]
+    },
+    "serve": {
+      "cache": false,
+      "dependsOn": ["^build", "build"]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": ["^bundle"],
+      "inputs": [
+        "default",
+        "^default",
+        "{projectRoot}/tsconfig.*",
+        "{workspaceRoot}/tsconfig.*"
+      ]
+    },
+    "lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/eslint.config.*",
+        "{projectRoot}/eslint.config.*"
+      ],
+      "outputs": ["{options.outputFile}"]
+    },
+    "prisma:generate": {
+      "cache": false,
+      "dependsOn": ["prisma:generate", "^prisma:generate"]
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/test/**/*",
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+      "!{projectRoot}/.storybook/**/*",
+      "!{projectRoot}/coverage/**/*",
+      "!{projectRoot}/test-results/**/*"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/pnpm-lock.yaml",
+      "{workspaceRoot}/nx.json",
+      "{workspaceRoot}/tsconfig.*",
+      "{workspaceRoot}/eslint.config.*",
+      "{workspaceRoot}/.github/workflows/ci.yml"
+    ]
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
+      }
+    }
+  ],
+  "defaultBase": "main",
+  "nxCloudId": ""
+}

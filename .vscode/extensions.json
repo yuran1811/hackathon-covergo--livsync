@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "antfu.file-nesting",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+    "dotenv.dotenv-vscode",
+    "YoavBls.pretty-ts-errors"
+  ]
+}

@@ -1,0 +1,62 @@
+name: CI PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+    paths-ignore:
+      - infra/**
+      - docs/**
+      - scripts/**
+      - .vscode/**
+      - .github/archive/**
+      - .github/instructions/**
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      SUPABASE_DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
+      SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY }}
+      SUPABASE_PUBLIC_API_KEY: ${{ secrets.SUPABASE_PUBLIC_API_KEY }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - name: Create .env
+        run: |
+          echo "SUPABASE_PUBLIC_API_KEY=${SUPABASE_PUBLIC_API_KEY}" >> .env
+          echo "SUPABASE_SECRET_API_KEY=${SUPABASE_SECRET_API_KEY}" >> .env
+          cp .env ./apps/web/.env.test
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        name: Install Node.js
+        with:
+          node-version: '>=22'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: pnpm nx affected -t lint test build

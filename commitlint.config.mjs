@@ -1,0 +1,130 @@
+/** @type {import('cz-git').UserConfig} */
+export default {
+  extends: ['@commitlint/config-conventional'],
+  prompt: {
+    types: [
+      {
+        value: 'feat',
+        name: 'feat: ✨ A new feature',
+        emoji: '✨',
+      },
+      {
+        value: 'fix',
+        name: 'fix: 🐛 A bug fix',
+        emoji: '🐛',
+      },
+      {
+        value: 'perf',
+        name: 'perf: ⚡ A code change that improves performance',
+        emoji: '⚡',
+      },
+      {
+        value: 'refactor',
+        name: 'refactor: 💫 A code change that neither fixes a bug nor adds a feature',
+        emoji: '💫',
+      },
+      {
+        value: 'style',
+        name: 'style: 🪄  Changes that do not affect the meaning of the code',
+        emoji: '🪄 ',
+      },
+      {
+        value: 'docs',
+        name: 'docs: 📖 Documentation for only changes',
+        emoji: '📖',
+      },
+      {
+        value: 'test',
+        name: 'test: ✅ Adding missing tests or correcting existing tests',
+        emoji: '✅',
+      },
+      {
+        value: 'build',
+        name: 'build: 📦 Changes that affect the build system or external dependencies',
+        emoji: '📦',
+      },
+      {
+        value: 'ci',
+        name: 'ci: ⚙️  Changes to our CI configuration files and scripts',
+        emoji: '⚙️ ',
+      },
+      {
+        value: 'chore',
+        name: "chore: 🔧 Other changes that don't modify src or test files",
+        emoji: '🔧',
+      },
+      {
+        value: 'expr',
+        name: 'expr: 💊 An experimental feature',
+        emoji: '💊',
+      },
+      {
+        value: 'revert',
+        name: 'revert: ⏳ Reverts a previous commit',
+        emoji: '⏳',
+      },
+    ],
+    messages: {
+      body: '🧊 Provide a LONGER description of the change (optional). Use "|" to break new line:\n',
+      breaking:
+        '💥 List any BREAKING CHANGES (optional). Use "|" to break new line:\n',
+      confirmCommit:
+        '🤔 Are you sure you want to proceed with the commit above?',
+      customFooterPrefix: '⌨️  Input ISSUES prefix:',
+      customScope:
+        '🪝  Denote the SCOPE of this change (api, ui, server, client, ...):',
+      footer: '🎭 List any ISSUES by this change. E.g.: #31, #34:\n',
+      footerPrefixesSelect:
+        '👉 Select the ISSUES type of changeList by this change (optional):',
+      generatedSelectByAI: '👉 Select suitable subject by AI generated:',
+      generatingByAI: '🤖 Generating your AI commit subject...',
+      scope: '🪝  Denote the SCOPE of this change (optional):',
+      subject:
+        '📝 Write a SHORT, IMPERATIVE tense description of the change:\n',
+      type: "👉 Select the type of change that you're committing:",
+    },
+    allowBreakingChanges: ['feat'],
+    alias: {
+      bump: 'chore(deps): 🔧 bump version',
+      bug: 'fix: 🐛 bug fixes',
+      typo: 'docs: 📖 fix typo',
+    },
+    allowCustomIssuePrefix: true,
+    allowCustomScopes: true,
+    allowEmptyIssuePrefix: true,
+    allowEmptyScopes: true,
+    breaklineChar: '|',
+    breaklineNumber: 100,
+    confirmColorize: true,
+    customIssuePrefixAlias: 'custom',
+    customIssuePrefixAlign: 'top',
+    customScopesAlias: 'custom',
+    customScopesAlign: 'bottom',
+    defaultBody: '',
+    defaultIssues: '',
+    defaultScope: '',
+    defaultSubject: '',
+    emojiAlign: 'center',
+    emptyIssuePrefixAlias: 'skip',
+    emptyScopesAlias: 'empty',
+    markBreakingChangeMode: false,
+    minSubjectLength: 0,
+    themeColorCode: '',
+    upperCaseSubject: false,
+    useEmoji: true,
+    scopes: [
+      '',
+      'api',
+      'client',
+      'config',
+      'core',
+      'deps',
+      'docs',
+      'misc',
+      'server',
+      'site',
+      'style',
+      'ui',
+    ],
+  },
+};

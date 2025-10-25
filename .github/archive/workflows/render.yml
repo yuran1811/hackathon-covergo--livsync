@@ -1,0 +1,25 @@
+name: Render Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - deploy/render
+    paths:
+      - apps/api/**
+      - '!**/tests?/**'
+      - '!infra/**'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.MY_RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.MY_RENDER_API_KEY }}

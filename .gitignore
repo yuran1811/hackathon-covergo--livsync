@@ -1,0 +1,36 @@
+.DS_Store
+.cache
+.cargo
+.data
+.eslintcache
+.unlighthouse
+.next
+.nuxt
+.nitro
+.output
+
+node_modules
+dist
+build
+output
+coverage
+__pycache__
+
+logs
+*.log*
+
+*.env*
+.flaskenv*
+!.env*.example
+!.env.project
+!.env.vault
+
+# Playwright
+test-results
+playwright-report
+blob-report
+playwright/.cache
+
+# Nx
+.nx/cache
+.nx/workspace-data

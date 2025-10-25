@@ -1,0 +1,52 @@
+name: Lint
+
+on:
+  push:
+    branches-ignore:
+      - deploy/**
+      - bump-deps
+    paths-ignore:
+      - infra/**
+      - docs/**
+      - scripts/**
+      - .vscode/**
+      - .github/**
+      - '**/tests?/**'
+  pull_request_target:
+    types:
+      - opened
+      - edited
+    paths-ignore:
+      - infra/**
+      - docs/**
+      - scripts/**
+      - .vscode/**
+      - .github/**
+      - '**/tests?/**'
+
+jobs:
+  run-linters:
+    name: run linters
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        name: install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        name: install node.js
+        with:
+          node-version: '>=22'
+          cache: pnpm
+
+      - run: pnpm i --frozen-lockfile
+        name: install dependencies
+
+      - run: pnpm lint-staged
+        name: lint
