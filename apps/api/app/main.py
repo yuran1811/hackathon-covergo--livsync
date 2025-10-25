@@ -1,13 +1,15 @@
 from typing import Union, List, Optional
 from fastapi import FastAPI, HTTPException
-from dependencies.calendar import (
+
+from app.dependencies.calendar import (
     createCalendarEvent,
     createSampleEvent,
     getCalendarEvents,
     getTodayEvents,
 )
-from models.calendar import CreateEventRequest
-from utils.timestamp import parse_iso_timestamp
+from app.models.calendar import CreateEventRequest
+from app.utils.timestamp import parse_iso_timestamp
+from app.dependencies.langchain import create_ai_insights
 
 app = FastAPI()
 
@@ -15,7 +17,6 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World", "message": "Calendar API is running"}
-
 
 @app.get("/health")
 def health_check():
@@ -123,3 +124,7 @@ async def create_sample_event():
             status_code=500, detail=f"Error creating sample event: {str(e)}"
         )
 
+
+@app.get("/users/{user_id}")
+def read_user(user_id: str):
+    return create_ai_insights(user_id=user_id)

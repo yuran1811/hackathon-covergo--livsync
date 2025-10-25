@@ -34,6 +34,7 @@
     "common": "pnpm --filter @livsync/pkg-common"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "catalog:",
     "@antfu/eslint-config": "catalog:",
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
@@ -44,10 +45,12 @@
     "bumpp": "catalog:",
     "cz-git": "catalog:",
     "dotenv": "catalog:",
-    "eslint": "9.38.0",
+    "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-format": "catalog:",
     "eslint-plugin-prettier": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
     "husky": "catalog:",
     "lint-staged": "catalog:",
     "nx": "catalog:",

@@ -1,5 +1,7 @@
 import antfu from '@antfu/eslint-config';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default antfu(
   {
@@ -17,7 +19,6 @@ export default antfu(
     typescript: true,
     markdown: true,
     jsonc: true,
-    vue: true,
   },
   {
     ignores: [
@@ -30,7 +31,6 @@ export default antfu(
       '**/test-results',
       '**/generated/prisma',
       'apps/api',
-      'apps/proto/**/*.{ts,tsx}',
       'pnpm-lock.yaml',
     ],
   },
@@ -65,6 +65,20 @@ export default antfu(
       'ts/no-require-imports': 'off',
       'ts/no-unused-vars': 'off',
       'ts/strict-boolean-expressions': 'off',
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
     },
   },
   eslintPluginPrettierRecommended,

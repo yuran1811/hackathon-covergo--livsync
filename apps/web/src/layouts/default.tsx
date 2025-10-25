@@ -1,29 +1,26 @@
-import { Link } from '@heroui/link';
+import { Outlet } from 'react-router';
 
-import { Navbar } from '@/components/navbar';
+import { BottomNav } from '@/components/BottomNav';
+import { Header } from '@/components/Header';
 
-export default function DefaultLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Layout() {
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+
   return (
-    <div className="relative flex h-screen flex-col">
-      <Navbar />
-      <main className="container mx-auto max-w-7xl flex-grow px-6 pt-16">
-        {children}
-      </main>
-      <footer className="flex w-full items-center justify-center py-3">
-        <Link
-          isExternal
-          className="flex items-center gap-1 text-current"
-          href="https://heroui.com"
-          title="heroui.com homepage"
-        >
-          <span className="text-default-600">Powered by</span>
-          <p className="text-primary">HeroUI</p>
-        </Link>
-      </footer>
-    </div>
+    <>
+      <div className="from-background to-wellness-light/20 min-h-screen bg-gradient-to-b pb-24">
+        <Header title="LivSync" subtitle={today} />
+
+        <main className="mx-auto max-w-md space-y-6 px-4 py-6">
+          <Outlet />
+        </main>
+
+        <BottomNav />
+      </div>
+    </>
   );
 }
