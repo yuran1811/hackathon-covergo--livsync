@@ -1,4 +1,5 @@
-from typing import Union, List, Optional
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException
 
 from app.dependencies.calendar import (
@@ -7,9 +8,9 @@ from app.dependencies.calendar import (
     getCalendarEvents,
     getTodayEvents,
 )
+from app.dependencies.langchain import create_ai_insights
 from app.models.calendar import CreateEventRequest
 from app.utils.timestamp import parse_iso_timestamp
-from app.dependencies.langchain import create_ai_insights
 
 app = FastAPI()
 
@@ -17,6 +18,7 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World", "message": "Calendar API is running"}
+
 
 @app.get("/health")
 def health_check():
@@ -27,45 +29,46 @@ def health_check():
 async def get_all_events(
     limit: int = 100,
     timestamp_start: Optional[str] = None,
-    timestamp_end: Optional[str] = None
+    timestamp_end: Optional[str] = None,
 ):
     """
     Get events from a calendar with optional time filtering
-    
+
     Query Parameters:
     - limit: Maximum number of events (default: 100)
     - timestamp_start: ISO 8601 timestamp for start time filter (optional)
       Example: "2025-10-25T00:00:00+07:00"
     - timestamp_end: ISO 8601 timestamp for end time filter (optional)
       Example: "2025-10-25T23:59:00+07:00"
-    
+
     If no time filters provided, returns all calendars
     """
     try:
         # Parse ISO 8601 timestamps to Unix timestamps
         unix_start = None
         unix_end = None
-        
+
         if timestamp_start:
             unix_start = parse_iso_timestamp(timestamp_start)
         if timestamp_end:
             unix_end = parse_iso_timestamp(timestamp_end)
-        
-        events = await getCalendarEvents(
-            timestamp_start=unix_start,
-            timestamp_end=unix_end,
-            limit=limit
+
+        events = getCalendarEvents(
+            timestamp_start=unix_start, timestamp_end=unix_end, limit=limit
         )
         return {"events": events, "count": len(events)}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid timestamp format: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid timestamp format: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting events: {str(e)}")
+
 
 @app.get("/calendar/events/today")
 async def get_today_events():
     try:
-        events = await getTodayEvents()
+        events = getTodayEvents()
         return {"events": events, "count": len(events)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting events: {str(e)}")
@@ -90,7 +93,7 @@ async def create_event(event_data: CreateEventRequest):
             event_data.conferencing.dict() if event_data.conferencing else None
         )
 
-        event = await createCalendarEvent(
+        event = createCalendarEvent(
             title=event_data.title,
             description=event_data.description,
             location=event_data.location,
@@ -117,7 +120,7 @@ async def create_sample_event():
     Create a sample event based on the provided curl request
     """
     try:
-        event = await createSampleEvent()
+        event = createSampleEvent()
         return {"message": "Sample event created successfully", "event": event}
     except Exception as e:
         raise HTTPException(
