@@ -1,5 +1,8 @@
+import os
+from datetime import datetime
+
 from dotenv import load_dotenv
-from datetime import datetime, timezone
+from nylas import Client
 from typing import Optional, Union
 
 from app.utils.timestamp import ensure_unix_timestamp, parse_iso_timestamp
@@ -7,12 +10,11 @@ from app.utils.timestamp import ensure_unix_timestamp, parse_iso_timestamp
 
 load_dotenv()
 
-import os
-from nylas import Client
 
-
-async def getCalendarEvents(
-    timestamp_start: int = None, timestamp_end: int = None, limit: int = 100
+def getCalendarEvents(
+    timestamp_start: int | None = None,
+    timestamp_end: int | None = None,
+    limit: int = 100,
 ):
     """
     Get calendar events with optional time filtering
@@ -27,7 +29,7 @@ async def getCalendarEvents(
         List of events or calendars if no time filters
     """
     try:
-        nylas = Client(os.environ.get("NYLAS_API_KEY"))
+        nylas = Client(os.environ.get("NYLAS_API_KEY") or "")
         grant_id = os.environ.get("NYLAS_GRANT_ID")
 
         target_calendar_id = os.environ.get("CALENDAR_ID")
@@ -56,12 +58,11 @@ async def getCalendarEvents(
         raise e
 
 
-async def getTodayEvents():
+def getTodayEvents():
     """
     Get today's events from a calendar (from 00:00 to 23:59)
     """
     try:
-
         # Get current time
         now = datetime.now()
         # Get start of today (00:00:00)
@@ -74,7 +75,7 @@ async def getTodayEvents():
         start = parse_iso_timestamp(start_of_today.isoformat())
         end = parse_iso_timestamp(end_of_today.isoformat())
 
-        events = await getCalendarEvents(timestamp_start=start, timestamp_end=end)
+        events = getCalendarEvents(timestamp_start=start, timestamp_end=end)
 
         return events
 
@@ -120,7 +121,7 @@ def createCalendarEvent(
         Created event data or error
     """
     try:
-        nylas = Client(os.environ.get("NYLAS_API_KEY"))
+        nylas = Client(os.environ.get("NYLAS_API_KEY") or "")
         grant_id = os.environ.get("NYLAS_GRANT_ID")
 
         if not grant_id:
@@ -187,11 +188,11 @@ def createCalendarEvent(
         raise e
 
 
-async def createSampleEvent():
+def createSampleEvent():
     """
     Create a sample event based on the provided curl request
     """
-    sample_event = await createCalendarEvent(
+    sample_event = createCalendarEvent(
         title="Annual Philosophy Club Meeting",
         description="Come ready to talk philosophy!",
         location="New York Public Library, Cave room",
@@ -225,7 +226,7 @@ async def createSampleEvent():
     return sample_event
 
 
-async def getAllEvents(calendar_id: str = None, limit: int = 100):
+def getAllEvents(calendar_id: str | None = None, limit: int = 100):
     """
     Get all events from a calendar
 
@@ -237,7 +238,7 @@ async def getAllEvents(calendar_id: str = None, limit: int = 100):
         List of events
     """
     try:
-        nylas = Client(os.environ.get("NYLAS_API_KEY"))
+        nylas = Client(os.environ.get("NYLAS_API_KEY") or "")
         grant_id = os.environ.get("NYLAS_GRANT_ID")
 
         if not grant_id:
