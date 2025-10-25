@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel
 
 
@@ -33,8 +33,8 @@ class CreateEventRequest(BaseModel):
     title: str
     description: Optional[str] = ""
     location: Optional[str] = ""
-    start_time: Optional[int] = None
-    end_time: Optional[int] = None
+    start_time: Optional[Union[int, float, str]] = None
+    end_time: Optional[Union[int, float, str]] = None
     start_timezone: str = "America/New_York"
     end_timezone: str = "America/New_York"
     participants: Optional[List[EventParticipant]] = None

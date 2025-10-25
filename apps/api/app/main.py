@@ -18,10 +18,6 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World", "message": "Calendar API is running"}
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "calendar-api"}
-
 
 @app.get("/calendar/events")
 async def get_all_events(
@@ -74,7 +70,7 @@ async def get_today_events():
 @app.post("/calendar/events")
 async def create_event(event_data: CreateEventRequest):
     """
-    Create a new calendar event
+    Create a new calendar event. start_time and end_time may be Unix seconds or ISO 8601 strings.
     """
     try:
         # Convert Pydantic models to dictionaries
@@ -109,20 +105,6 @@ async def create_event(event_data: CreateEventRequest):
         return {"message": "Event created successfully", "event": event}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating event: {str(e)}")
-
-
-@app.post("/calendar/events/sample")
-async def create_sample_event():
-    """
-    Create a sample event based on the provided curl request
-    """
-    try:
-        event = await createSampleEvent()
-        return {"message": "Sample event created successfully", "event": event}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error creating sample event: {str(e)}"
-        )
 
 
 @app.get("/users/{user_id}")
