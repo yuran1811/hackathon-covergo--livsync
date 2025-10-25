@@ -45,12 +45,9 @@ def getCalendarEvents(
         if timestamp_end:
             query_params["end"] = timestamp_end
 
-        print(f"Getting events with filters: {query_params}")
-
         # Get events with filters
         events = nylas.events.list(grant_id, query_params=query_params)
 
-        print(f"Retrieved {len(events.data)} events")
         return events.data
 
     except Exception as e:

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 from app.dependencies.calendar import (
     createCalendarEvent,
@@ -11,8 +12,22 @@ from app.dependencies.calendar import (
 from app.dependencies.langchain import create_ai_insights
 from app.models.calendar import CreateEventRequest
 from app.utils.timestamp import parse_iso_timestamp
+from app.dependencies.langchain import create_ai_insights
+from app.utils.event_poller import event_poller
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the event poller on startup"""
+    await event_poller.start()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop the event poller on shutdown"""
+    await event_poller.stop()
 
 
 @app.get("/")
