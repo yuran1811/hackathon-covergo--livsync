@@ -1,5 +1,6 @@
 from typing import Union, List, Optional
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 
 from app.dependencies.calendar import (
     createCalendarEvent,
@@ -10,8 +11,21 @@ from app.dependencies.calendar import (
 from app.models.calendar import CreateEventRequest
 from app.utils.timestamp import parse_iso_timestamp
 from app.dependencies.langchain import create_ai_insights
+from app.utils.event_poller import event_poller
 
 app = FastAPI()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the event poller on startup"""
+    await event_poller.start()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop the event poller on shutdown"""
+    await event_poller.stop()
 
 
 @app.get("/")
@@ -19,8 +33,13 @@ def read_root():
     return {"Hello": "World", "message": "Calendar API is running"}
 
 @app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "calendar-api"}
+async def health_check():
+    return JSONResponse({
+        "status": "healthy",
+        "service": "calendar-api",
+        "poller_running": event_poller.is_running(),
+        "poller_enabled": event_poller.running
+    })
 
 
 @app.get("/calendar/events")

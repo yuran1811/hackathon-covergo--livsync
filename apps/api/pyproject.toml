@@ -12,4 +12,5 @@ dependencies = [
  "python-dateutil>=2.8.2",
  "python-dotenv>=1.1.1",
  "supabase>=2.22.2",
+ "httpx>=0.25.0",
 ]
