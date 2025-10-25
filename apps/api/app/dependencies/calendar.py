@@ -3,8 +3,10 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from nylas import Client
+from typing import Optional, Union
 
-from app.utils.timestamp import parse_iso_timestamp
+from app.utils.timestamp import ensure_unix_timestamp, parse_iso_timestamp
+
 
 load_dotenv()
 
@@ -86,16 +88,16 @@ def createCalendarEvent(
     title: str,
     description: str = "",
     location: str = "",
-    start_time: int | None = None,
-    end_time: int | None = None,
-    start_timezone: str = "America/New_York",
-    end_timezone: str = "America/New_York",
-    participants: list | None = None,
-    resources: list | None = None,
+    start_time: Union[int, float, str, None] = None,
+    end_time: Union[int, float, str, None] = None,
+    start_timezone: str = "Asia/Ho_Chi_Minh",
+    end_timezone: str = "Asia/Ho_Chi_Minh",
+    participants: Optional[list] = None,
+    resources: Optional[list] = None,
     busy: bool = True,
-    conferencing: dict | None = None,
-    recurrence: list | None = None,
-    calendar_id: str | None = None,
+    conferencing: Optional[dict] = None,
+    recurrence: Optional[list] = None,
+    calendar_id: Optional[str] = None,
 ):
     """
     Create a calendar event using Nylas API
@@ -106,8 +108,8 @@ def createCalendarEvent(
         location: Event location
         start_time: Unix timestamp for start time
         end_time: Unix timestamp for end time
-        start_timezone: Start timezone (default: America/New_York)
-        end_timezone: End timezone (default: America/New_York)
+        start_timezone: Start timezone
+        end_timezone: End timezone
         participants: List of participants with name and email
         resources: List of resources with name and email
         busy: Whether the event is busy (default: True)
@@ -132,6 +134,10 @@ def createCalendarEvent(
                 "Calendar ID not provided and CALENDAR_ID not set in environment variables"
             )
 
+        # Normalize timestamps if provided so downstream calls receive integers
+        start_ts = ensure_unix_timestamp(start_time)
+        end_ts = ensure_unix_timestamp(end_time)
+
         # Prepare event data
         event_data = {
             "title": title,
@@ -141,10 +147,10 @@ def createCalendarEvent(
         }
 
         # Add time information if provided
-        if start_time and end_time:
+        if start_ts and end_ts:
             event_data["when"] = {
-                "start_time": start_time,
-                "end_time": end_time,
+                "start_time": start_ts,
+                "end_time": end_ts,
                 "start_timezone": start_timezone,
                 "end_timezone": end_timezone,
             }

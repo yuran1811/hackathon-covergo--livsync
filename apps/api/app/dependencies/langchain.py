@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
+import datetime
 
 from app.dependencies.calendar import getTodayEvents
 from app.dependencies.supabase import supabase_client
@@ -78,6 +79,7 @@ def get_today_schedule():
 @tool
 def write_to_calendar(event_details: str):
     """Write an event to the user's calendar."""
+
     pass
 
 
@@ -131,6 +133,48 @@ def ai_event_suggestions(user_id: str, changed_events: list[str]) -> Any:
                 {
                     "role": "user",
                     "content": f"My user ID is {user_id}. Given the following changed events in my schedule: {', '.join(changed_events)}, please provide suggestions on how I can adapt my health goals and routines accordingly. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}.",
+                }
+            ]
+        },
+    )
+
+    return (
+        "\n".join(
+            [_["text"] for _ in response["messages"][-1].content if _["type"] == "text"]
+        )
+        or "No suggestions generated."
+    )
+
+def ai_event_changed_suggestions(user_id: str, changed_events: list[str]) -> Any:
+    """Generate AI suggestions for adapting to changed events in the user's schedule."""
+    current_datetime = datetime.now()
+
+    response = agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"My user ID is {user_id}. Given the following changed events in my schedule: {', '.join(changed_events)}, please provide suggestions on how I can adapt my health goals and routines accordingly. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}. If detailed suggestions are not necessary, just respond with 'No changes needed.'. If add activity, only response in 'start time', 'end time', 'title' and 'description' with json format.",
+                }
+            ]
+        },
+    )
+
+    return (
+        "\n".join(
+            [_["text"] for _ in response["messages"][-1].content if _["type"] == "text"]
+        )
+        or "No suggestions generated."
+    )
+
+def ai_event_day_suggestions(user_id: str) -> Any:
+    """Generate AI suggestions for a specific day based on events in the user's schedule."""
+    response = agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"My user ID is {user_id}. Use tool to get today events, please provide suggestions on how I can optimize my health goals and routines for that day. If detailed suggestions are not necessary, just respond with 'No changes needed.'. If add activity, only response in 'start time', 'end time', 'title' and 'description' with json format.",
                 }
             ]
         },

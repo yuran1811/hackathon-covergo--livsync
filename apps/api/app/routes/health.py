@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from models.health_models import HealthOverviewResponse
 router = APIRouter(prefix="/health", tags=["Health"])
   
