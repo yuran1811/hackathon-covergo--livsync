@@ -1,18 +1,18 @@
+from dataclasses import asdict, is_dataclass
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
 
 from app.dependencies.calendar import (
     createCalendarEvent,
-    createSampleEvent,
     getCalendarEvents,
     getTodayEvents,
 )
-from app.dependencies.langchain import create_ai_insights
+from app.dependencies.auth import get_current_user
+from app.dependencies.langchain import ai_event_day_suggestions, create_ai_insights
 from app.models.calendar import CreateEventRequest
 from app.utils.timestamp import parse_iso_timestamp
-from app.dependencies.langchain import create_ai_insights
 from app.utils.event_poller import event_poller
 
 app = FastAPI()
@@ -124,6 +124,22 @@ async def create_event(event_data: CreateEventRequest):
         raise HTTPException(status_code=500, detail=f"Error creating event: {str(e)}")
 
 
-@app.get("/users/{user_id}")
-def read_user(user_id: str):
+@app.get("/health/insights")
+def read_user(user_id: str = Depends(get_current_user)):
+    print( "user_id:", user_id)
     return create_ai_insights(user_id=user_id)
+
+
+@app.get("/event-day-suggestion")
+async def get_event_day_suggestion(user_id: str = Depends(get_current_user)):
+    try:
+        suggestion = ai_event_day_suggestions(user_id=user_id)
+
+        if is_dataclass(suggestion):
+            return {"suggestion": asdict(suggestion)}
+
+        return {"suggestion": suggestion}
+    except Exception as exc:  # pragma: no cover - pass-through for HTTP error
+        raise HTTPException(
+            status_code=500, detail=f"Error generating event suggestion: {exc}"
+        )

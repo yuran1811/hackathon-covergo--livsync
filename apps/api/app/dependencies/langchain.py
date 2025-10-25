@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -6,7 +7,6 @@ from zoneinfo import ZoneInfo
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
-import datetime
 
 from app.dependencies.calendar import getTodayEvents
 from app.dependencies.supabase import supabase_client
@@ -21,8 +21,23 @@ Just tell meaningful insights based on the data provided. Don't just repeat the 
 Healthy sleep range: 7-9 hours per night.
 Good sleep quality: above 80.
 Stress level: below 50 is considered low stress.
-If necessary, you can also write events to the user's calendar to help them stay on track with their health goals.
 """
+
+
+@dataclass
+class EventSuggestion:
+    """Structured response for calendar suggestions."""
+
+    start_time: str
+    end_time: str
+    title: str
+    description: str
+    rationale: str
+
+
+EVENT_SUGGESTION_PROMPT = """You are a health-focused scheduling assistant.
+Recommend calendar adjustments that keep the user on track with health goals.
+When proposing an event, ensure the times are in ISO 8601 format and the plan is concise."""
 
 
 @tool
@@ -75,14 +90,6 @@ def get_today_schedule():
     ]
     return "User's schedule for today: " + ", ".join(events)
 
-
-@tool
-def write_to_calendar(event_details: str):
-    """Write an event to the user's calendar."""
-
-    pass
-
-
 llm_model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 agent = create_agent(
     model=llm_model,
@@ -90,9 +97,20 @@ agent = create_agent(
         get_users_objectives,
         get_today_health_data,
         get_today_schedule,
-        write_to_calendar,
     ],
     system_prompt=SYSTEM_PROMPT,
+)
+
+
+event_suggestion_agent = create_agent(
+    model=llm_model,
+    tools=[
+        get_users_objectives,
+        get_today_health_data,
+        get_today_schedule,
+    ],
+    system_prompt=EVENT_SUGGESTION_PROMPT,
+    response_format=EventSuggestion,
 )
 
 
@@ -123,42 +141,28 @@ def create_ai_insights(user_id: str) -> HealthInsightsResponse | Any:
     )
 
 
-def ai_event_suggestions(user_id: str, changed_events: list[str]) -> Any:
-    """Generate AI suggestions for adapting to changed events in the user's schedule."""
-    current_datetime = datetime.now()
-
-    response = agent.invoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"My user ID is {user_id}. Given the following changed events in my schedule: {', '.join(changed_events)}, please provide suggestions on how I can adapt my health goals and routines accordingly. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}.",
-                }
-            ]
-        },
-    )
-
-    return (
-        "\n".join(
-            [_["text"] for _ in response["messages"][-1].content if _["type"] == "text"]
-        )
-        or "No suggestions generated."
-    )
-
 def ai_event_changed_suggestions(user_id: str, changed_events: list[str]) -> Any:
     """Generate AI suggestions for adapting to changed events in the user's schedule."""
-    current_datetime = datetime.now()
+    if not changed_events:
+        return "No changed events provided."
 
-    response = agent.invoke(
+    response = event_suggestion_agent.invoke(
         {
             "messages": [
                 {
                     "role": "user",
-                    "content": f"My user ID is {user_id}. Given the following changed events in my schedule: {', '.join(changed_events)}, please provide suggestions on how I can adapt my health goals and routines accordingly. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}. If detailed suggestions are not necessary, just respond with 'No changes needed.'. If add activity, only response in 'start time', 'end time', 'title' and 'description' with json format.",
+                    "content": (
+                        f"My user ID is {user_id}. Given these schedule changes: {', '.join(changed_events)}, suggest a replacement event in ISO 8601 format that keeps me aligned with my health goals. "
+                        "If nothing needs to change, simply respond with 'No changes needed.'"
+                    ),
                 }
             ]
-        },
+        }
     )
+
+    structured = response.get("structured_response")
+    if structured:
+        return structured
 
     return (
         "\n".join(
@@ -166,19 +170,28 @@ def ai_event_changed_suggestions(user_id: str, changed_events: list[str]) -> Any
         )
         or "No suggestions generated."
     )
+
 
 def ai_event_day_suggestions(user_id: str) -> Any:
     """Generate AI suggestions for a specific day based on events in the user's schedule."""
-    response = agent.invoke(
+    current_datetime = datetime.now()
+    response = event_suggestion_agent.invoke(
         {
             "messages": [
                 {
                     "role": "user",
-                    "content": f"My user ID is {user_id}. Use tool to get today events, please provide suggestions on how I can optimize my health goals and routines for that day. If detailed suggestions are not necessary, just respond with 'No changes needed.'. If add activity, only response in 'start time', 'end time', 'title' and 'description' with json format.",
+                    "content": (
+                        f"My user ID is {user_id}. Review today's health objectives and calendar, then propose one supportive event in ISO 8601 format. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}"
+                        "If no change is required, respond with 'No changes needed.'"
+                    ),
                 }
             ]
-        },
+        }
     )
+
+    structured = response.get("structured_response")
+    if structured:
+        return structured
 
     return (
         "\n".join(
@@ -186,3 +199,22 @@ def ai_event_day_suggestions(user_id: str) -> Any:
         )
         or "No suggestions generated."
     )
+
+
+def generate_structured_event_suggestion(user_id: str) -> EventSuggestion | str:
+    """Generate a structured event suggestion to reinforce health goals."""
+    response = event_suggestion_agent.invoke(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": (
+                        f"My user ID is {user_id}. Review my health targets and current schedule, then propose a single event that helps me stay aligned with my goals."
+                    ),
+                }
+            ]
+        }
+    )
+
+    structured = response.get("structured_response")
+    return structured if structured else "No suggestion generated."
