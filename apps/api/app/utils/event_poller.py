@@ -3,10 +3,13 @@ Event Poller - Polls for calendar events and detects changes
 """
 
 import asyncio
+import json
 import logging
 import os
 import random
+from dataclasses import asdict, is_dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, Any, List
 
 import httpx
@@ -20,6 +23,7 @@ MAX_JITTER_SEC = 1  # Random jitter to avoid collisions
 BACKOFF_BASE = 2  # Backoff multiplier for errors
 POLL_ENABLED = os.getenv("ENABLE_EVENT_POLLER", "1") == "1"
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+SUGGESTION_FILE = Path(__file__).with_name("event_suggestions.json")
 
 
 class EventPoller:
@@ -180,15 +184,15 @@ class EventPoller:
                 # Log full objects for debugging (if enabled)
                 self.log_full_objects(added, updated, removed)
 
-                # Update snapshot
-                self.prev_events = snapshot
-
                 await self.handle_event_changes(added, updated, removed)
             else:
                 logger.debug("No event changes detected")
 
             # Reset backoff on success
             self.backoff = 0
+
+            # Update snapshot after handling changes so previous data remains available
+            self.prev_events = snapshot
 
         except Exception as e:
             logger.warning(f"Poll failed: {e}")
@@ -198,7 +202,144 @@ class EventPoller:
         self, added: List[dict], updated: List[dict], removed: List[dict]
     ):
         """Handle detected event changes - override this for custom logic"""
-        pass
+        if not self.prev_events and added and not updated and not removed:
+            logger.debug("Initial event snapshot captured; skipping AI suggestions")
+            return
+
+        descriptions = self._build_change_descriptions(added, updated, removed)
+        if not descriptions:
+            return
+
+        try:
+            from app.dependencies.auth import get_current_user
+            from app.dependencies.langchain import ai_event_changed_suggestions
+        except Exception as exc:  # pragma: no cover - import errors logged
+            logger.error("Unable to import dependencies for AI suggestions: %s", exc)
+            return
+
+        user_id = get_current_user()
+
+        try:
+            suggestion = await asyncio.to_thread(
+                ai_event_changed_suggestions, user_id, descriptions
+            )
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.error("AI suggestion generation failed: %s", exc)
+            return
+
+        payload = self._prepare_suggestion_payload(user_id, descriptions, suggestion)
+
+        try:
+            await asyncio.to_thread(self._persist_suggestion, payload)
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.error("Failed to persist suggestion payload: %s", exc)
+
+    def _prepare_suggestion_payload(
+        self, user_id: str, descriptions: List[str], suggestion: Any
+    ) -> Dict[str, Any]:
+        """Prepare structured payload for suggestion persistence"""
+        if is_dataclass(suggestion):
+            suggestion_content: Any = asdict(suggestion)
+        elif isinstance(suggestion, dict):
+            suggestion_content = suggestion
+        else:
+            suggestion_content = str(suggestion)
+
+        return {
+            "user_id": user_id,
+            "generated_at": datetime.utcnow().isoformat(),
+            "changes": descriptions,
+            "suggestion": suggestion_content,
+        }
+
+    def _persist_suggestion(self, payload: Dict[str, Any]) -> None:
+        """Persist suggestion payload to disk"""
+        SUGGESTION_FILE.parent.mkdir(parents=True, exist_ok=True)
+        SUGGESTION_FILE.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=True), encoding="utf-8"
+        )
+        logger.info("Updated event suggestions at %s", SUGGESTION_FILE)
+
+    def _build_change_descriptions(
+        self, added: List[dict], updated: List[dict], removed: List[dict]
+    ) -> List[str]:
+        """Build human-readable descriptions for changed events"""
+        descriptions: List[str] = []
+
+        for event in added:
+            descriptions.append(self._describe_added_event(event))
+
+        for event in updated:
+            event_id = event.get("id")
+            prev_event = self.prev_events.get(event_id, {}) if event_id else {}
+            descriptions.append(self._describe_updated_event(event, prev_event))
+
+        for event in removed:
+            descriptions.append(self._describe_removed_event(event))
+
+        return [desc for desc in descriptions if desc]
+
+    def _describe_added_event(self, event: dict) -> str:
+        title = event.get("title", "Untitled")
+        event_id = event.get("id", "unknown")
+        start, end = self._extract_event_times(event)
+        location = event.get("location") or "Unspecified location"
+        return (
+            f"Added event '{title}' (ID: {event_id}) scheduled from {start} to {end}"
+            f" at {location}."
+        )
+
+    def _describe_updated_event(self, event: dict, prev_event: dict) -> str:
+        event_id = event.get("id", "unknown")
+        title = event.get("title", "Untitled")
+
+        old_start, old_end = self._extract_event_times(prev_event)
+        new_start, new_end = self._extract_event_times(event)
+
+        old_location = prev_event.get("location") or "Unspecified location"
+        new_location = event.get("location") or "Unspecified location"
+
+        changes: List[str] = []
+        if old_start != new_start:
+            changes.append(f"start {old_start} -> {new_start}")
+        if old_end != new_end:
+            changes.append(f"end {old_end} -> {new_end}")
+        if old_location != new_location:
+            changes.append(f"location '{old_location}' -> '{new_location}'")
+
+        if not changes:
+            changes.append("details were updated without time or location changes")
+
+        return (
+            f"Updated event '{title}' (ID: {event_id}); " + ", ".join(changes) + "."
+        )
+
+    def _describe_removed_event(self, event: dict) -> str:
+        title = event.get("title", "Untitled")
+        event_id = event.get("id", "unknown")
+        start, end = self._extract_event_times(event)
+        return (
+            f"Removed event '{title}' (ID: {event_id}) that was scheduled from"
+            f" {start} to {end}."
+        )
+
+    def _extract_event_times(self, event: dict) -> tuple:
+        when = event.get("when") or {}
+        start = when.get("start_time")
+        end = when.get("end_time")
+        return self._format_timestamp(start), self._format_timestamp(end)
+
+    def _format_timestamp(self, raw_value: Any) -> str:
+        if raw_value in (None, ""):
+            return "unspecified time"
+
+        if isinstance(raw_value, (int, float)):
+            try:
+                return datetime.fromtimestamp(raw_value).isoformat()
+            except Exception:  # pragma: no cover - fallback formatting
+                return str(raw_value)
+
+        return str(raw_value)
 
     async def poller_loop(self):
         """Main polling loop"""
