@@ -31,6 +31,7 @@ export default antfu(
       '**/test-results',
       '**/generated/prisma',
       'apps/api',
+      'apps/web',
       'pnpm-lock.yaml',
     ],
   },

@@ -122,7 +122,7 @@ catalogs:
       specifier: ^0.5.16
       version: 0.5.19
     '@tanstack/react-query':
-      specifier: ^5.83.0
+      specifier: 5.90.5
       version: 5.90.5
     '@types/node':
       specifier: ^22.16.5
@@ -179,7 +179,7 @@ catalogs:
       specifier: ^5.2.0
       version: 5.2.0
     eslint-plugin-react-refresh:
-      specifier: ^0.4.20
+      specifier: ^0.4.24
       version: 0.4.24
     husky:
       specifier: ^9.1.7
@@ -242,7 +242,7 @@ catalogs:
       specifier: ^1.0.7
       version: 1.0.7
     typescript:
-      specifier: ^5.8.3
+      specifier: ^5.9.3
       version: 5.9.3
     vaul:
       specifier: ^0.9.9
@@ -263,6 +263,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      typescript-eslint:
+        specifier: 8.46.2
+        version: 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
     devDependencies:
       '@antfu/eslint-config':
         specifier: 'catalog:'
@@ -428,9 +432,15 @@ importers:
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.76.1
+      '@tanstack/query-async-storage-persister':
+        specifier: 5.90.7
+        version: 5.90.7
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.5(react@18.3.1)
+      '@tanstack/react-query-persist-client':
+        specifier: 5.90.7
+        version: 5.90.7(@tanstack/react-query@5.90.5(react@18.3.1))(react@18.3.1)
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -491,6 +501,9 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+      zustand:
+        specifier: 5.0.8
+        version: 5.0.8(@types/react@18.3.26)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
       '@tailwindcss/typography':
         specifier: 'catalog:'
@@ -2650,8 +2663,20 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
+  '@tanstack/query-async-storage-persister@5.90.7':
+    resolution: {integrity: sha512-WbQ20ebB2rZoZONgIz5y/oxunX4X/+3T81v2Le1FzyJX2l5CqenygqTTx3HF/+OVNbv/Kph/QCDkbES6SGkdKw==}
+
   '@tanstack/query-core@5.90.5':
     resolution: {integrity: sha512-wLamYp7FaDq6ZnNehypKI5fNvxHPfTYylE0m/ZpuuzJfJqhR5Pxg9gvGBHZx4n7J+V5Rg5mZxHHTlv25Zt5u+w==}
+
+  '@tanstack/query-persist-client-core@5.91.4':
+    resolution: {integrity: sha512-HZ8kvAbhttLZKUO4ASHl49u7dQXzRVEogi7/6CCZ5BBItWh2hoEUqy9QHUS4ji7iZiuXe4jwTJNzq2VIuxlnsQ==}
+
+  '@tanstack/react-query-persist-client@5.90.7':
+    resolution: {integrity: sha512-TlEzewa4YN51ZhbLZ9HzIBTY/b1K7xFJGSm1cUCE+tNnzSUwiLWhoD6H7EvgWb/KJePYDIJ3hGWLwQPdP86fmA==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.90.5
+      react: ^18 || ^19
 
   '@tanstack/react-query@5.90.5':
     resolution: {integrity: sha512-pN+8UWpxZkEJ/Rnnj2v2Sxpx1WFlaa9L6a4UO89p6tTQbeo+m0MS8oYDjbggrR8QcTyjKoYWKS3xJQGr3ExT8Q==}
@@ -3197,8 +3222,8 @@ packages:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
 
-  commander@14.0.1:
-    resolution: {integrity: sha512-2JkV3gUZUVrbNA+1sjBOYLsMZ5cEEl8GTFP2a4AVz5hvasAMCQ1D2l2le/cX+pV4N6ZU17zjUahLpIXRrnWL8A==}
+  commander@14.0.2:
+    resolution: {integrity: sha512-TywoWNNRbhoD0BXs1P3ZEScW8W5iKrnbithIl0YH+uCmBd0QpPOA8yc82DS3BIE5Ma6FnBVUsJ7wVUDz4dvOWQ==}
     engines: {node: '>=20'}
 
   commander@4.1.1:
@@ -5388,6 +5413,13 @@ packages:
     resolution: {integrity: sha512-5zknd7Dss75pMSED270A1RQS3KloqRJA9XbXLe0eCxyw7xXFb3rd+9B0UQ/0E+LQT6lnrLviEolYORlRWamn4w==}
     engines: {node: '>=16'}
 
+  typescript-eslint@8.46.2:
+    resolution: {integrity: sha512-vbw8bOmiuYNdzzV3lsiWv6sRwjyuKJMQqWulBOU7M0RrxedXledX8G8kBbQeiOYDnTfiXz0Y4081E1QMNB6iQg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0
+      typescript: '>=4.8.4 <6.0.0'
+
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
@@ -5689,6 +5721,24 @@ packages:
 
   zod@4.1.12:
     resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
+  zustand@5.0.8:
+    resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -8024,7 +8074,22 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.18(yaml@2.8.1)
 
+  '@tanstack/query-async-storage-persister@5.90.7':
+    dependencies:
+      '@tanstack/query-core': 5.90.5
+      '@tanstack/query-persist-client-core': 5.91.4
+
   '@tanstack/query-core@5.90.5': {}
+
+  '@tanstack/query-persist-client-core@5.91.4':
+    dependencies:
+      '@tanstack/query-core': 5.90.5
+
+  '@tanstack/react-query-persist-client@5.90.7(@tanstack/react-query@5.90.5(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/query-persist-client-core': 5.91.4
+      '@tanstack/react-query': 5.90.5(react@18.3.1)
+      react: 18.3.1
 
   '@tanstack/react-query@5.90.5(react@18.3.1)':
     dependencies:
@@ -8659,7 +8724,7 @@ snapshots:
     dependencies:
       delayed-stream: 1.0.0
 
-  commander@14.0.1: {}
+  commander@14.0.2: {}
 
   commander@4.1.1: {}
 
@@ -9777,7 +9842,7 @@ snapshots:
 
   lint-staged@16.2.6:
     dependencies:
-      commander: 14.0.1
+      commander: 14.0.2
       listr2: 9.0.5
       micromatch: 4.0.8
       nano-spawn: 2.0.0
@@ -11029,6 +11094,17 @@ snapshots:
 
   type-fest@4.2.0: {}
 
+  typescript-eslint@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3):
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 8.46.2(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/parser': 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/typescript-estree': 8.46.2(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
+      eslint: 9.38.0(jiti@2.6.1)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - supports-color
+
   typescript@5.9.3: {}
 
   ufo@1.6.1: {}
@@ -11304,5 +11380,11 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.1.12: {}
+
+  zustand@5.0.8(@types/react@18.3.26)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1)):
+    optionalDependencies:
+      '@types/react': 18.3.26
+      react: 18.3.1
+      use-sync-external-store: 1.6.0(react@18.3.1)
 
   zwitch@2.0.4: {}
