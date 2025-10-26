@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import random
+import subprocess
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
@@ -36,6 +37,8 @@ class EventPoller:
         self.prev_events = {}  # Previous snapshot: {id: event}
         self.lock = asyncio.Lock()
         self.backoff = 0
+        
+
 
     async def get_today_events(self) -> list[dict]:
         """Get today's events from the API"""
@@ -292,14 +295,15 @@ class EventPoller:
         SUGGESTION_FILE.write_text(
             json.dumps(payload, indent=2, ensure_ascii=True), encoding="utf-8"
         )
+
         logger.info("Updated event suggestions at %s", SUGGESTION_FILE)
+        self._broadcast_suggestion(payload)
 
     def _build_change_descriptions(
         self, added: list[dict], updated: list[dict], removed: list[dict]
     ) -> list[str]:
         """Build human-readable descriptions for changed events"""
         descriptions: list[str] = []
-
         for event in added:
             descriptions.append(self._describe_added_event(event))
 
@@ -372,6 +376,57 @@ class EventPoller:
                 return str(raw_value)
 
         return str(raw_value)
+
+    def _broadcast_suggestion(self, payload: dict[str, Any]) -> None:
+        """Notify Supabase realtime service about updated suggestions"""
+        token = (
+            os.getenv("SUPABASE_KEY")
+        )
+        url = os.getenv("SUPABASE_URL")
+
+        if not token or not url:
+            logger.warning("Supabase credentials missing; skipping realtime broadcast")
+            return
+
+        broadcast_url = url.rstrip("/") + "/realtime/v1/api/broadcast"
+        topic = os.getenv("SUPABASE_BROADCAST_TOPIC", "event-changes")
+        event_name = os.getenv("SUPABASE_BROADCAST_EVENT", "shout")
+
+        message = {
+            "messages": [
+                {
+                    "topic": topic,
+                    "event": event_name,
+                    "payload": payload,
+                }
+            ]
+        }
+
+        curl_cmd = [
+            "curl",
+            "-v",
+            "-H",
+            f"apikey: {token}",
+            "-H",
+            "Content-Type: application/json",
+            "--data-raw",
+            json.dumps(message),
+            broadcast_url,
+        ]
+
+        try:
+            result = subprocess.run(
+                curl_cmd,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            stderr = (exc.stderr or "").replace(token, "***")
+            logger.error("Supabase broadcast failed: %s", stderr or exc)
+        else:
+            if result.returncode == 0:
+                logger.info("Supabase broadcast succeeded")
 
     async def poller_loop(self):
         """Main polling loop"""

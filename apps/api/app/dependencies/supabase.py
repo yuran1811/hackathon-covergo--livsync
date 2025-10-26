@@ -1,4 +1,4 @@
-from supabase import Client, create_client
+from supabase import Client, create_client, create_async_client
 from supabase.client import ClientOptions
 
 from app.dependencies.config import SUPABASE_KEY, SUPABASE_URL
