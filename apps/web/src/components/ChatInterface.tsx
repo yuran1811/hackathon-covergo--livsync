@@ -1,56 +1,52 @@
-import { useState, useRef } from 'react';
-import { Send, Mic, MicOff } from 'lucide-react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { ScrollArea } from './ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { ChatMessage } from '@/shared/types';
+import { useNotifs } from '@/store';
+import { Mic, MicOff, Send } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { Button } from './ui/button';
+import { ScrollArea } from './ui/scroll-area';
+import { Textarea } from './ui/textarea';
 import { VoiceInput } from './VoiceInput';
 
 interface ChatInterfaceProps {
   onClose: () => void;
 }
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-}
-
 export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hi! I'm your health assistant. How can I help you today?",
-    },
-  ]);
+  const chatMessages = useNotifs((state) => state.chatMessages);
+  const addChatMessage = useNotifs((state) => state.addChatMessage);
+
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  const handleSend = () => {
+  const handleSend = useCallback(async () => {
     if (!input.trim()) return;
 
-    const newMessage: Message = {
+    addChatMessage({
       id: Date.now().toString(),
       role: 'user',
       content: input,
-    };
-
-    setMessages([...messages, newMessage]);
+    });
     setInput('');
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'I understand. Let me help you with that!',
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
-  };
+    const res = await fetch(import.meta.env.VITE_API_URL + '/chat/message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_message: input }),
+    });
+    const data = await res.json();
+
+    const newMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: data.response,
+    };
+    addChatMessage(newMessage);
+  }, [input]);
 
   const handleTranscript = (text: string) => {
     setInput(text);
@@ -97,7 +93,7 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="bg-card border-border absolute bottom-20 left-1/2 z-40 flex h-96 w-[calc(100vw-2rem)] -translate-x-1/2 flex-col rounded-2xl border shadow-2xl">
+    <div className="bg-card border-border absolute bottom-20 left-1/2 z-40 flex h-screen max-h-[calc(100vh-12rem)] w-[calc(100vw-2rem)] max-w-[600px] -translate-x-1/2 flex-col rounded-2xl border shadow-2xl">
       {/* Header */}
       <div className="border-border border-b p-4">
         <h3 className="text-foreground font-semibold">Health Assistant</h3>
@@ -109,7 +105,7 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
       {/* Messages */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((message) => (
+          {chatMessages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -149,17 +145,6 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
             </Button>
 
             <VoiceInput onTranscript={handleTranscript} />
-            {/* <Button
-              size="icon"
-              variant={isRecording ? 'destructive' : 'secondary'}
-              onClick={toggleRecording}
-            >
-              {isRecording ? (
-                <MicOff className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </Button> */}
           </div>
         </div>
       </div>

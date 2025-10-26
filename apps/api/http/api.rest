@@ -48,3 +48,11 @@ GET http://localhost:8000/event-day-suggestion
 
 GET http://localhost:8000/health/insights
 ###
+
+POST http://localhost:8000/chat/message
+Content-Type: application/json
+
+{
+  "user_message": "Hello, how can I improve my fitness?"
+}
+###

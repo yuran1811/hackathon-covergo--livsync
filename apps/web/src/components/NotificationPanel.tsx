@@ -1,16 +1,10 @@
+import { PushNotification } from '@/shared/types';
+import { useNotifs } from '@/store';
 import { Activity, Heart, Moon, TrendingUp } from 'lucide-react';
+import { useEffect } from 'react';
 import { ScrollArea } from './ui/scroll-area';
 
-interface Notification {
-  id: string;
-  type: 'health' | 'activity' | 'sleep' | 'achievement';
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-const notifications: Notification[] = [
+const notifications: PushNotification[] = [
   {
     id: '1',
     type: 'health',
@@ -60,10 +54,16 @@ const colorMap = {
 };
 
 export const NotificationPanel = () => {
+  const notifs = useNotifs((state) => state.notifications);
+
+  useEffect(() => {
+    console.log('New notification', notifs);
+  }, [notifs]);
+
   return (
     <ScrollArea className="mt-6 h-[calc(100vh-8rem)]">
       <div className="space-y-3">
-        {notifications.map((notification) => {
+        {notifs.map((notification) => {
           const Icon = iconMap[notification.type];
           const iconColor = colorMap[notification.type];
 
