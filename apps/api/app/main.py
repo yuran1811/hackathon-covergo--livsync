@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.calendar import (
@@ -11,7 +12,11 @@ from app.dependencies.calendar import (
     getCalendarEvents,
     getTodayEvents,
 )
-from app.dependencies.langchain import ai_event_day_suggestions, create_ai_insights, ai_health_chatbot_conversation
+from app.dependencies.langchain import (
+    ai_event_day_suggestions,
+    ai_health_chatbot_conversation,
+    create_ai_insights,
+)
 from app.dependencies.user_profile import (
     create_user_profile,
     get_user_profile,
@@ -41,7 +46,6 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8000",
-
 ]
 
 app.add_middleware(
@@ -211,8 +215,10 @@ async def get_event_day_suggestion(user_id: str = Depends(get_current_user)):
             status_code=500, detail=f"Error generating event suggestion: {exc}"
         )
 
+
 class ChatRequest(BaseModel):
     user_message: str
+
 
 @app.post("/chat/message")
 async def chat_message(request: ChatRequest, user_id: str = Depends(get_current_user)):

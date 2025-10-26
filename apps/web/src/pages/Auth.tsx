@@ -1,33 +1,41 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/dashboard");
+        navigate('/dashboard');
       }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        navigate("/dashboard");
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/dashboard');
       }
     });
 
@@ -50,14 +58,14 @@ const Auth = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Account created successfully. You can now sign in.",
+        title: 'Success!',
+        description: 'Account created successfully. You can now sign in.',
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -77,14 +85,14 @@ const Auth = () => {
       if (error) throw error;
 
       toast({
-        title: "Welcome back!",
-        description: "Successfully signed in.",
+        title: 'Welcome back!',
+        description: 'Successfully signed in.',
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -92,14 +100,14 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 flex items-center justify-center p-4">
+    <div className="from-background via-background to-primary/5 flex min-h-screen items-center justify-center bg-gradient-to-b p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Sparkles className="w-7 h-7 text-white" />
+        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
+          <div className="from-primary to-accent flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br">
+            <Sparkles className="h-7 w-7 text-white" />
           </div>
-          <span className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent">
             HealthFlow
           </span>
         </Link>
@@ -144,13 +152,13 @@ const Auth = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Signing In...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
+                          </>
+                        ) : (
+                          'Sign In'
+                        )}
                   </Button>
                 </form>
               </TabsContent>
@@ -182,13 +190,13 @@ const Auth = () => {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Creating Account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
+                          </>
+                        ) : (
+                          'Create Account'
+                        )}
                   </Button>
                 </form>
               </TabsContent>
@@ -196,7 +204,7 @@ const Auth = () => {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        <p className="text-muted-foreground mt-4 text-center text-sm">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>

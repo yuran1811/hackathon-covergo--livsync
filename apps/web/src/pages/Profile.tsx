@@ -1,14 +1,14 @@
-import { Header } from '@/components/Header';
-import { BottomNav } from '@/components/BottomNav';
-import { FloatingChatButton } from '@/components/FloatingChatButton';
 import { Button } from '@/components/ui/button';
+import { useUserProfile } from '@/hooks/use-user';
+import { UserProfile } from '@/shared/types';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  User,
-  Settings,
   Bell,
   HelpCircle,
   LogOut,
   MessageCircle,
+  Settings,
+  User,
 } from 'lucide-react';
 
 const Profile = () => {
@@ -20,32 +20,32 @@ const Profile = () => {
     { icon: HelpCircle, label: 'Help & Support', onClick: () => {} },
   ];
 
+  const queryClient = useQueryClient();
+  const { status, data, error, isFetching } = useUserProfile();
+  if (!isFetching) console.log('🚀 ~ Profile ~ data:', data);
+
   return (
     <>
       {/* User Profile */}
       <section className="from-wellness to-wellness/80 rounded-3xl bg-gradient-to-br p-6 text-white">
-        <div className="mb-4 flex items-center gap-4">
+        <div className="flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20">
             <User className="h-10 w-10" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold">John Doe</h2>
-            <p className="text-sm text-white/80">john.doe@example.com</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-3 border-t border-white/20 pt-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold">23</p>
-            <p className="text-xs text-white/80">Days Active</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">156</p>
-            <p className="text-xs text-white/80">Workouts</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">89%</p>
-            <p className="text-xs text-white/80">Goal Rate</p>
-          </div>
+          {isFetching ? (
+            <div>Loading...</div>
+          ) : error ? (
+            <div>Error loading profile</div>
+          ) : (
+            <div>
+              <h2 className="text-xl font-bold">
+                {data?.full_name || 'John Doe'}
+              </h2>
+              <p className="text-sm text-white/80">
+                {data?.email || 'johndoe@example.com'}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 

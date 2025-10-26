@@ -1,10 +1,10 @@
-import { Header } from '@/components/Header';
-import { BottomNav } from '@/components/BottomNav';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { ActivityCard } from '@/components/ActivityCard';
+import { BottomNav } from '@/components/BottomNav';
+import { Header } from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -90,10 +90,10 @@ const Calendar = () => {
                   'bg-primary text-primary-foreground shadow-md',
                 day !== selectedDate &&
                   day === new Date().getDate() &&
-                  'bg-wellness-light text-wellness border-wellness/30 border-2',
+                'bg-wellness-light text-wellness border-wellness/30 border-2',
                 day &&
                   day !== selectedDate &&
-                  day !== new Date().getDate() &&
+                day !== new Date().getDate() &&
                   'hover:bg-muted text-foreground',
               )}
             >

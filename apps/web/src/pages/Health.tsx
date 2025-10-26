@@ -1,7 +1,7 @@
-import { Header } from '@/components/Header';
+import { Brain, Dumbbell, Footprints, Heart, Moon, Zap } from 'lucide-react';
 import { BottomNav } from '@/components/BottomNav';
+import { Header } from '@/components/Header';
 import { HealthMetricCard } from '@/components/HealthMetricCard';
-import { Heart, Footprints, Moon, Zap, Brain, Dumbbell } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const Health = () => {
