@@ -1,22 +1,26 @@
 from pydantic import BaseModel
 
+
 class HealthData(BaseModel):
-  sleep_hours: float
-  sleep_score: int
-  steps_count: int
-  heart_rate: int
-  stress_level: int
+    sleep_hours: float
+    sleep_score: int
+    steps_count: int
+    heart_rate: int
+    stress_level: int
+
 
 class HealthInsightsResponse(BaseModel):
-  ai_insights: str = None
+    ai_insights: str | None = None
+
 
 class HeathSuggestionsResponse(BaseModel):
-  suggestions: list[str] = []
+    suggestions: list[str] = []
+
 
 class HealthOverviewResponse(BaseModel):
-  sleep_hours: float
-  sleep_score: int
-  steps_count: int
-  heart_rate: int
-  emotional_wellbeing_state: str
-  ai_insights: str = None
+    sleep_hours: float
+    sleep_score: int
+    steps_count: int
+    heart_rate: int
+    emotional_wellbeing_state: str
+    ai_insights: str | None = None

@@ -10,7 +10,7 @@ import random
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 import httpx
 
@@ -37,7 +37,7 @@ class EventPoller:
         self.lock = asyncio.Lock()
         self.backoff = 0
 
-    async def get_today_events(self) -> List[dict]:
+    async def get_today_events(self) -> list[dict]:
         """Get today's events from the API"""
         try:
             # Ensure client is available and not closed
@@ -56,7 +56,7 @@ class EventPoller:
             logger.error(f"Failed to get today's events: {e}")
             raise
 
-    def diff_events(self, prev: Dict[str, dict], curr_list: List[dict]) -> tuple:
+    def diff_events(self, prev: dict[str, dict], curr_list: list[dict]) -> tuple:
         """Compare previous and current events to find changes"""
         curr = {e["id"]: e for e in curr_list}
 
@@ -82,86 +82,120 @@ class EventPoller:
 
         return added, updated, removed, curr
 
-    def log_changes(self, added: List[dict], updated: List[dict], removed: List[dict]):
+    def log_changes(self, added: list[dict], updated: list[dict], removed: list[dict]):
         """Log detected changes with detailed object information"""
         if added:
             logger.info(f"ADDED {len(added)} events:")
             for event in added:
-                logger.info(f"  + {event.get('title', 'Untitled')} (ID: {event.get('id')})")
-                logger.info(f"    Start: {event.get('when', {}).get('start_time', 'N/A')}")
+                logger.info(
+                    f"  + {event.get('title', 'Untitled')} (ID: {event.get('id')})"
+                )
+                logger.info(
+                    f"    Start: {event.get('when', {}).get('start_time', 'N/A')}"
+                )
                 logger.info(f"    End: {event.get('when', {}).get('end_time', 'N/A')}")
                 logger.info(f"    Location: {event.get('location', 'N/A')}")
                 logger.info(f"    Description: {event.get('description', 'N/A')}")
                 logger.info(f"    Participants: {len(event.get('participants', []))}")
                 logger.info(f"    Updated: {event.get('updated_at', 'N/A')}")
-                logger.info("    " + "="*50)
+                logger.info("    " + "=" * 50)
 
         if updated:
             logger.info(f"UPDATED {len(updated)} events:")
             for event in updated:
-                event_id = event.get('id')
+                event_id = event.get("id")
                 old_event = self.prev_events.get(event_id, {})
-                
+
                 logger.info(f"  ~ {event.get('title', 'Untitled')} (ID: {event_id})")
-                
-                self._log_field_changes("Title", old_event.get('title'), event.get('title'))
-                self._log_field_changes("Description", old_event.get('description'), event.get('description'))
-                self._log_field_changes("Location", old_event.get('location'), event.get('location'))
-                self._log_field_changes("Start Time", old_event.get('when', {}).get('start_time'), event.get('when', {}).get('start_time'))
-                self._log_field_changes("End Time", old_event.get('when', {}).get('end_time'), event.get('when', {}).get('end_time'))
-                self._log_field_changes("Updated At", old_event.get('updated_at'), event.get('updated_at'))
-                
+
+                self._log_field_changes(
+                    "Title", old_event.get("title"), event.get("title")
+                )
+                self._log_field_changes(
+                    "Description",
+                    old_event.get("description"),
+                    event.get("description"),
+                )
+                self._log_field_changes(
+                    "Location", old_event.get("location"), event.get("location")
+                )
+                self._log_field_changes(
+                    "Start Time",
+                    old_event.get("when", {}).get("start_time"),
+                    event.get("when", {}).get("start_time"),
+                )
+                self._log_field_changes(
+                    "End Time",
+                    old_event.get("when", {}).get("end_time"),
+                    event.get("when", {}).get("end_time"),
+                )
+                self._log_field_changes(
+                    "Updated At", old_event.get("updated_at"), event.get("updated_at")
+                )
+
                 # Log participants changes
-                old_participants = old_event.get('participants', [])
-                new_participants = event.get('participants', [])
+                old_participants = old_event.get("participants", [])
+                new_participants = event.get("participants", [])
                 if old_participants != new_participants:
-                    logger.info(f"    Participants changed:")
-                    logger.info(f"      OLD: {[p.get('email') for p in old_participants]}")
-                    logger.info(f"      NEW: {[p.get('email') for p in new_participants]}")
-                
-                logger.info("    " + "="*50)
+                    logger.info("    Participants changed:")
+                    logger.info(
+                        f"      OLD: {[p.get('email') for p in old_participants]}"
+                    )
+                    logger.info(
+                        f"      NEW: {[p.get('email') for p in new_participants]}"
+                    )
+
+                logger.info("    " + "=" * 50)
 
         if removed:
             logger.info(f"REMOVED {len(removed)} events:")
             for event in removed:
-                logger.info(f"  - {event.get('title', 'Untitled')} (ID: {event.get('id')})")
-                logger.info(f"    Was scheduled: {event.get('when', {}).get('start_time', 'N/A')}")
+                logger.info(
+                    f"  - {event.get('title', 'Untitled')} (ID: {event.get('id')})"
+                )
+                logger.info(
+                    f"    Was scheduled: {event.get('when', {}).get('start_time', 'N/A')}"
+                )
                 logger.info(f"    Location: {event.get('location', 'N/A')}")
-                logger.info(f"    Had {len(event.get('participants', []))} participants")
-                logger.info("    " + "="*50)
-    
+                logger.info(
+                    f"    Had {len(event.get('participants', []))} participants"
+                )
+                logger.info("    " + "=" * 50)
+
     def _log_field_changes(self, field_name: str, old_value, new_value):
         """Log individual field changes"""
         if old_value != new_value:
             logger.info(f"    {field_name}:")
             logger.info(f"      OLD: {old_value}")
             logger.info(f"      NEW: {new_value}")
-    
-    def log_full_objects(self, added: List[dict], updated: List[dict], removed: List[dict]):
+
+    def log_full_objects(
+        self, added: list[dict], updated: list[dict], removed: list[dict]
+    ):
         """Log complete objects for debugging"""
         if added:
             logger.info("FULL OBJECTS - ADDED EVENTS:")
             for i, event in enumerate(added, 1):
                 logger.info(f"  Event {i}:")
                 logger.info(f"    {event}")
-                logger.info("    " + "-"*30)
-        
+                logger.info("    " + "-" * 30)
+
         if updated:
             logger.info("FULL OBJECTS - UPDATED EVENTS:")
             for i, event in enumerate(updated, 1):
-                event_id = event.get('id')
+                event_id = event.get("id")
                 old_event = self.prev_events.get(event_id, {})
                 logger.info(f"  Event {i} (ID: {event_id}):")
                 logger.info(f"    OLD OBJECT: {old_event}")
                 logger.info(f"    NEW OBJECT: {event}")
-                logger.info("    " + "-"*30)
-        
+                logger.info("    " + "-" * 30)
+
         if removed:
             logger.info("FULL OBJECTS - REMOVED EVENTS:")
             for i, event in enumerate(removed, 1):
                 logger.info(f"  Event {i}:")
                 logger.info(f"    {event}")
-                logger.info("    " + "-"*30)
+                logger.info("    " + "-" * 30)
 
     async def poll_once(self):
         """Perform a single poll operation"""
@@ -177,10 +211,10 @@ class EventPoller:
             # Log changes if any
             if added or updated or removed:
                 logger.info(f"Event changes detected at {datetime.now().isoformat()}")
-                
+
                 # Log detailed changes
                 self.log_changes(added, updated, removed)
-                
+
                 # Log full objects for debugging (if enabled)
                 self.log_full_objects(added, updated, removed)
 
@@ -199,7 +233,7 @@ class EventPoller:
             self.backoff = min(4, self.backoff + 1)  # Max 4 backoff steps
 
     async def handle_event_changes(
-        self, added: List[dict], updated: List[dict], removed: List[dict]
+        self, added: list[dict], updated: list[dict], removed: list[dict]
     ):
         """Handle detected event changes - override this for custom logic"""
         if not self.prev_events and added and not updated and not removed:
@@ -235,8 +269,8 @@ class EventPoller:
             logger.error("Failed to persist suggestion payload: %s", exc)
 
     def _prepare_suggestion_payload(
-        self, user_id: str, descriptions: List[str], suggestion: Any
-    ) -> Dict[str, Any]:
+        self, user_id: str, descriptions: list[str], suggestion: Any
+    ) -> dict[str, Any]:
         """Prepare structured payload for suggestion persistence"""
         if is_dataclass(suggestion):
             suggestion_content: Any = asdict(suggestion)
@@ -252,7 +286,7 @@ class EventPoller:
             "suggestion": suggestion_content,
         }
 
-    def _persist_suggestion(self, payload: Dict[str, Any]) -> None:
+    def _persist_suggestion(self, payload: dict[str, Any]) -> None:
         """Persist suggestion payload to disk"""
         SUGGESTION_FILE.parent.mkdir(parents=True, exist_ok=True)
         SUGGESTION_FILE.write_text(
@@ -261,10 +295,10 @@ class EventPoller:
         logger.info("Updated event suggestions at %s", SUGGESTION_FILE)
 
     def _build_change_descriptions(
-        self, added: List[dict], updated: List[dict], removed: List[dict]
-    ) -> List[str]:
+        self, added: list[dict], updated: list[dict], removed: list[dict]
+    ) -> list[str]:
         """Build human-readable descriptions for changed events"""
-        descriptions: List[str] = []
+        descriptions: list[str] = []
 
         for event in added:
             descriptions.append(self._describe_added_event(event))
@@ -299,7 +333,7 @@ class EventPoller:
         old_location = prev_event.get("location") or "Unspecified location"
         new_location = event.get("location") or "Unspecified location"
 
-        changes: List[str] = []
+        changes: list[str] = []
         if old_start != new_start:
             changes.append(f"start {old_start} -> {new_start}")
         if old_end != new_end:
@@ -310,9 +344,7 @@ class EventPoller:
         if not changes:
             changes.append("details were updated without time or location changes")
 
-        return (
-            f"Updated event '{title}' (ID: {event_id}); " + ", ".join(changes) + "."
-        )
+        return f"Updated event '{title}' (ID: {event_id}); " + ", ".join(changes) + "."
 
     def _describe_removed_event(self, event: dict) -> str:
         title = event.get("title", "Untitled")

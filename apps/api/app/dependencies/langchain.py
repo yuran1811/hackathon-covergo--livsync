@@ -2,7 +2,6 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from langchain.agents import create_agent
 from langchain.tools import tool
@@ -90,6 +89,7 @@ def get_today_schedule():
         for _ in res
     ]
     return "User's schedule for today: " + ", ".join(events)
+
 
 llm_model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 agent = create_agent(

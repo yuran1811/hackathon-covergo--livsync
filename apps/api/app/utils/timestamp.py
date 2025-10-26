@@ -21,7 +21,7 @@ def parse_iso_timestamp(iso_string: str) -> int:
 
         return unix_timestamp
 
-    except Exception as e:
+    except Exception:
         raise ValueError(f"Invalid ISO 8601 timestamp format: {iso_string}")
 
 

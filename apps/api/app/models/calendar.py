@@ -1,4 +1,5 @@
-from typing import List, Optional, Union
+from typing import Optional, Union
+
 from pydantic import BaseModel
 
 
@@ -37,11 +38,11 @@ class CreateEventRequest(BaseModel):
     end_time: Optional[Union[int, float, str]] = None
     start_timezone: str = "America/New_York"
     end_timezone: str = "America/New_York"
-    participants: Optional[List[EventParticipant]] = None
-    resources: Optional[List[EventResource]] = None
+    participants: Optional[list[EventParticipant]] = None
+    resources: Optional[list[EventResource]] = None
     busy: bool = True
     conferencing: Optional[Conferencing] = None
-    recurrence: Optional[List[str]] = None
+    recurrence: Optional[list[str]] = None
     calendar_id: Optional[str] = None
 
 
@@ -51,9 +52,9 @@ class EventResponse(BaseModel):
 
 
 class EventsListResponse(BaseModel):
-    events: List[dict]
+    events: list[dict]
     count: int
 
 
 class CalendarsResponse(BaseModel):
-    calendars: List[dict]
+    calendars: list[dict]
