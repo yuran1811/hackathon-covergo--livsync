@@ -25,7 +25,9 @@ from app.dependencies.user_profile import (
 from app.models.calendar import CreateEventRequest
 from app.utils.event_poller import event_poller
 from app.utils.timestamp import parse_iso_timestamp
-
+from pydantic import BaseModel
+from app.utils.random_health_data import get_persisted_mock_health_data
+import json
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,6 +66,28 @@ def read_root():
 async def health_insights(user_id: str = Depends(get_current_user)):
     return create_ai_insights(user_id=user_id)
 
+@app.get("health/data")
+async def health_data(user_id: str = Depends(get_current_user)):
+    mock_data = get_persisted_mock_health_data("realistic")
+
+    return json.dumps(
+        {
+            "steps": mock_data["steps"],
+            "distance_meters": mock_data["distance_meters"],
+            "calories_burned": mock_data["calories_burned"],
+            "sleep_duration": mock_data["sleep_duration"],
+            "sleep_quality": mock_data["sleep_quality"],
+            "heart_rate": mock_data["heart_rate"],
+            "stress_score": mock_data["stress_score"],
+            "bp_systolic": mock_data["bp_systolic"],
+            "bp_diastolic": mock_data["bp_diastolic"],
+            "blood_glucose": mock_data["blood_glucose"],
+            "blood_oxygen": mock_data["blood_oxygen"],
+            "blood_pressure": mock_data["blood_pressure"],
+            "timestamp": mock_data["timestamp"],
+            "weekly_workouts": mock_data["weekly_workouts"],
+        }
+    )
 
 @app.get("/calendar/events")
 async def get_all_events(
