@@ -1,12 +1,10 @@
 import json
 from datetime import datetime
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
-import datetime
 
 from app.dependencies.calendar import getTodayEvents
 from app.dependencies.supabase import supabase_client
@@ -79,7 +77,6 @@ def get_today_schedule():
 @tool
 def write_to_calendar(event_details: str):
     """Write an event to the user's calendar."""
-
     pass
 
 
@@ -145,6 +142,7 @@ def ai_event_suggestions(user_id: str, changed_events: list[str]) -> Any:
         or "No suggestions generated."
     )
 
+
 def ai_event_changed_suggestions(user_id: str, changed_events: list[str]) -> Any:
     """Generate AI suggestions for adapting to changed events in the user's schedule."""
     current_datetime = datetime.now()
@@ -167,6 +165,7 @@ def ai_event_changed_suggestions(user_id: str, changed_events: list[str]) -> Any
         or "No suggestions generated."
     )
 
+
 def ai_event_day_suggestions(user_id: str) -> Any:
     """Generate AI suggestions for a specific day based on events in the user's schedule."""
     response = agent.invoke(
@@ -180,9 +179,11 @@ def ai_event_day_suggestions(user_id: str) -> Any:
         },
     )
 
-    return (
-        "\n".join(
-            [_["text"] for _ in response["messages"][-1].content if _["type"] == "text"]
-        )
-        or "No suggestions generated."
-    )
+    return response
+
+    # return (
+    #     "\n".join(
+    #         [_["text"] for _ in response["messages"][-1].content if _["type"] == "text"]
+    #     )
+    #     or "No suggestions generated."
+    # )

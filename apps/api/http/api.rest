@@ -1,0 +1,44 @@
+GET http://localhost:8000
+###
+
+GET http://localhost:8000/calendar/events
+###
+
+GET http://localhost:8000/calendar/events/today
+###
+
+POST http://localhost:8000/users
+Content-Type: application/json
+
+{
+  "full_name": "Vinh Pham",
+  "email": "vinh.pham@dev.local",
+  "step_goal": 8000,
+  "gender": "male",
+  "dob": "2004-11-16",
+  "height": 175,
+  "weight": 70,
+  "activity_level": "moderate",
+  "custom_goals": "Improve cardiovascular health"
+}
+###
+
+GET http://localhost:8000/users/7e0d54d0-e609-4f0c-be79-d850812bf788
+###
+
+GET http://localhost:8000/users/fc99160a-4d90-42cd-8123-a110e0fbf6d8
+###
+
+PUT http://localhost:8000/users/7e0d54d0-e609-4f0c-be79-d850812bf788
+Content-Type: application/json
+
+{
+  "full_name": "Khoa Ngo"
+}
+###
+
+GET http://localhost:8000/users/7e0d54d0-e609-4f0c-be79-d850812bf788/insights
+###
+
+GET http://localhost:8000/users/fc99160a-4d90-42cd-8123-a110e0fbf6d8/insights
+###

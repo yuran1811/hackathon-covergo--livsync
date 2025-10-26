@@ -1,12 +1,12 @@
 import os
 from datetime import datetime
+from typing import Optional, Union
 
 from dotenv import load_dotenv
 from nylas import Client
-from typing import Optional, Union
+from nylas.models.events import CreateEventRequest, ListEventQueryParams
 
 from app.utils.timestamp import ensure_unix_timestamp, parse_iso_timestamp
-
 
 load_dotenv()
 
@@ -32,12 +32,15 @@ def getCalendarEvents(
         nylas = Client(os.environ.get("NYLAS_API_KEY") or "")
         grant_id = os.environ.get("NYLAS_GRANT_ID")
 
-        target_calendar_id = os.environ.get("CALENDAR_ID")
+        target_calendar_id = os.environ.get("CALENDAR_ID") or ""
         if not grant_id:
             raise Exception("NYLAS_GRANT_ID not set in environment variables")
 
         # Prepare query parameters
-        query_params = {"calendar_id": target_calendar_id, "limit": limit}
+        query_params: ListEventQueryParams = {
+            "calendar_id": target_calendar_id,
+            "limit": limit,
+        }
 
         # Add time filters if provided
         if timestamp_start:
@@ -173,7 +176,7 @@ def createCalendarEvent(
         # Create the event
         event = nylas.events.create(
             grant_id,
-            request_body=event_data,
+            request_body=CreateEventRequest(**event_data),
             query_params={"calendar_id": target_calendar_id},
         )
 
@@ -250,7 +253,7 @@ def getAllEvents(calendar_id: str | None = None, limit: int = 100):
 
         # Get events
         events = nylas.events.list(
-            grant_id=grant_id,
+            grant_id,
             query_params={"calendar_id": target_calendar_id, "limit": limit},
         )
 
