@@ -40,7 +40,6 @@ const App = () => {
   useEffect(() => {
     const registerServiceWorker = async () => {
       const permission = await Notification.requestPermission();
-      console.log('🚀 ~ registerServiceWorker ~ permission:', permission);
     };
 
     registerServiceWorker().then(console.log);

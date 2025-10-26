@@ -23,6 +23,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
 
   useEffect(() => {
+    navigate('/dashboard');
+    return;
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {

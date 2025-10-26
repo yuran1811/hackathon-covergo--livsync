@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router';
-import { Activity, Heart, Calendar, Sparkles } from 'lucide-react';
+import { Activity, Heart, Calendar, Sparkles, CloudCog } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const Index = () => {
   return (

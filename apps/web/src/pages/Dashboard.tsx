@@ -1,8 +1,30 @@
 import { ActivityCard } from '@/components/ActivityCard';
 import { HealthMetricCard } from '@/components/HealthMetricCard';
 import { Footprints, Heart, Moon, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const Dashboard = () => {
+  const [insights, setInsights] = useState<any>(null);
+  const [loadInsight, setLoadInsight] = useState<boolean>(true);
+
+  const fetchInsights = async () => {
+    setLoadInsight(true);
+    const response = await fetch(import.meta.env.VITE_API_URL + '/health/insights');
+    const data = await response.json();
+    setInsights(data.response_text);
+    console.log("🚀 ~ fetchInsights ~ data.response_text:", data.response_text)
+    setLoadInsight(false);
+  }
+
+  useEffect(() => {
+    console.log("Fetching insights...");
+    fetchInsights().then(() => {
+      console.log("Insights fetched successfully");
+    }).catch((error) => {
+      console.error("Error fetching insights:", error);
+    });
+  }, []);
+
   return (
     <>
       {/* AI Insights */}
@@ -11,8 +33,9 @@ const Dashboard = () => {
           AI Health Insight
         </h3>
         <p className="text-muted-foreground text-sm">
-          Your activity level is great today! Consider adding a short evening
-          walk to reach your 10,000 steps goal and improve your sleep quality.
+          {
+            loadInsight ? 'Loading insight...' : (insights || 'No insights available at the moment.')
+          }
         </p>
       </section>
 

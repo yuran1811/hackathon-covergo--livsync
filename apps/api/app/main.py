@@ -1,3 +1,4 @@
+import json
 from contextlib import asynccontextmanager
 from dataclasses import asdict, is_dataclass
 from typing import Optional
@@ -24,10 +25,9 @@ from app.dependencies.user_profile import (
 )
 from app.models.calendar import CreateEventRequest
 from app.utils.event_poller import event_poller
-from app.utils.timestamp import parse_iso_timestamp
-from pydantic import BaseModel
 from app.utils.random_health_data import get_persisted_mock_health_data
-import json
+from app.utils.timestamp import parse_iso_timestamp
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -66,6 +66,7 @@ def read_root():
 async def health_insights(user_id: str = Depends(get_current_user)):
     return create_ai_insights(user_id=user_id)
 
+
 @app.get("health/data")
 async def health_data(user_id: str = Depends(get_current_user)):
     mock_data = get_persisted_mock_health_data("realistic")
@@ -88,6 +89,7 @@ async def health_data(user_id: str = Depends(get_current_user)):
             "weekly_workouts": mock_data["weekly_workouts"],
         }
     )
+
 
 @app.get("/calendar/events")
 async def get_all_events(
