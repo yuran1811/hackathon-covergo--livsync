@@ -7,10 +7,11 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from app.dependencies.calendar import getTodayEvents
+from app.dependencies.calendar import getTodayEvents, createCalendarEvent
 from app.dependencies.supabase import supabase_client
 from app.models.health_models import HealthInsightsResponse
 from app.utils.random_health_data import get_persisted_mock_health_data
+from langgraph.checkpoint.memory import InMemorySaver
 
 SYSTEM_PROMPT = """You are a health AI assistant.
 Your goal is to help users achieve their health objectives by analyzing their daily health data and schedule. 
@@ -38,6 +39,19 @@ EVENT_SUGGESTION_PROMPT = """You are a health-focused scheduling assistant.
 Recommend calendar adjustments that keep the user on track with health goals.
 When proposing an event, ensure the times are in ISO 8601 format and the plan is concise."""
 
+
+@dataclass
+class HealthChatbotResponse:
+    """Structured response for health chatbot."""
+
+    response_text: str
+
+HEALTH_CHATBOT_AGENT_PROMPT  = """You are a health-focused AI assistant.
+Your role is to help users achieve their health objectives by analyzing their daily health data and schedule. 
+Use the provided tools to fetch the user's health objectives, today's health data, and today's schedule. 
+Based on this information, help users with their requests.
+You also can create calendar events to help users stay on track with their health goals if they request.
+"""
 
 @tool
 def get_users_objectives(user_id: str):
@@ -89,6 +103,21 @@ def get_today_schedule():
         for _ in res
     ]
     return "User's schedule for today: " + ", ".join(events)
+
+@tool
+def create_calendar_event(start_time: str, end_time: str, title: str, description: str):
+    """Create a calendar event."""
+    try:
+        event = createCalendarEvent(
+            start_time=start_time,
+            end_time=end_time,
+            title=title,
+            description=description,
+        )
+        return f"Created event"
+    except Exception as e:
+        return f"An error occurred while creating calendar event: {str(e)}"
+
 
 
 llm_model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
@@ -201,21 +230,39 @@ def ai_event_day_suggestions(user_id: str) -> Any:
         or "No suggestions generated."
     )
 
+checkpointer = InMemorySaver()
 
-def generate_structured_event_suggestion(user_id: str) -> EventSuggestion | str:
-    """Generate a structured event suggestion to reinforce health goals."""
-    response = event_suggestion_agent.invoke(
+chatbot_agent = create_agent(
+    model=llm_model,
+    tools=[
+        get_users_objectives,
+        get_today_health_data,
+        get_today_schedule,
+        create_calendar_event,
+    ],
+    response_format=HealthChatbotResponse,
+    checkpointer=checkpointer,
+    system_prompt=HEALTH_CHATBOT_AGENT_PROMPT,
+)
+
+
+
+def ai_health_chatbot_conversation(user_id: str, user_message: str) -> Any:
+    """Generate AI chatbot response based on user's health data and objectives."""
+    current_datetime = datetime.now()
+
+    response = chatbot_agent.invoke(
         {
             "messages": [
                 {
                     "role": "user",
-                    "content": (
-                        f"My user ID is {user_id}. Review my health targets, and current schedule, then propose a single event that helps me stay aligned with my goals."
-                    ),
+                    "content": f"My user ID is {user_id}. Current date and time is {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}. {user_message}",
                 }
             ]
-        }
+        },
+        config={"configurable": {"thread_id": "1"}}
     )
 
-    structured = response.get("structured_response")
-    return structured if structured else "No suggestion generated."
+    structured: HealthChatbotResponse = response.get("structured_response")
+    if structured:
+        return structured.response_text
