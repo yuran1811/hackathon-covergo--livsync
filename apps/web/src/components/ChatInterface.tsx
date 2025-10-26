@@ -1,8 +1,7 @@
-import { useToast } from '@/hooks/use-toast';
 import { ChatMessage } from '@/shared/types';
 import { useNotifs } from '@/store';
-import { Mic, MicOff, Send } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { Send } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Textarea } from './ui/textarea';
@@ -17,9 +16,6 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
   const addChatMessage = useNotifs((state) => state.addChatMessage);
 
   const [input, setInput] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const { toast } = useToast();
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const handleSend = useCallback(async () => {
     if (!input.trim()) return;
@@ -50,46 +46,6 @@ export const ChatInterface = ({ onClose }: ChatInterfaceProps) => {
 
   const handleTranscript = (text: string) => {
     setInput(text);
-  };
-
-  const toggleRecording = async () => {
-    if (!isRecording) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-
-        const audioChunks: Blob[] = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-          audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          // Here you would send the audio to a speech-to-text service
-          toast({
-            title: 'Voice recorded',
-            description: 'Voice input feature coming soon!',
-          });
-          stream.getTracks().forEach((track) => track.stop());
-        };
-
-        mediaRecorder.start();
-        setIsRecording(true);
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Could not access microphone',
-          variant: 'destructive',
-        });
-      }
-    } else {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-    }
   };
 
   return (
