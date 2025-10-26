@@ -3,6 +3,7 @@ from dataclasses import asdict, is_dataclass
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.dependencies.auth import get_current_user
 from app.dependencies.calendar import (
@@ -10,7 +11,7 @@ from app.dependencies.calendar import (
     getCalendarEvents,
     getTodayEvents,
 )
-from app.dependencies.langchain import ai_event_day_suggestions, create_ai_insights
+from app.dependencies.langchain import ai_event_day_suggestions, create_ai_insights, ai_health_chatbot_conversation
 from app.dependencies.user_profile import (
     create_user_profile,
     get_user_profile,
@@ -19,7 +20,7 @@ from app.dependencies.user_profile import (
 from app.models.calendar import CreateEventRequest
 from app.utils.event_poller import event_poller
 from app.utils.timestamp import parse_iso_timestamp
-
+from pydantic import BaseModel
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +30,25 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8000",
+
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -165,4 +185,21 @@ async def get_event_day_suggestion(user_id: str = Depends(get_current_user)):
     except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Error generating event suggestion: {exc}"
+        )
+
+class ChatRequest(BaseModel):
+    user_message: str
+
+@app.post("/chat/message")
+async def chat_message(request: ChatRequest, user_id: str = Depends(get_current_user)):
+    try:
+        response = ai_health_chatbot_conversation(
+            user_id=user_id,
+            user_message=request.user_message,
+        )
+
+        return {"response": response}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500, detail=f"Error generating chatbot response: {exc}"
         )

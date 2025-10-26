@@ -1,0 +1,14 @@
+{
+  "user_id": "7e0d54d0-e609-4f0c-be79-d850812bf788",
+  "generated_at": "2025-10-26T04:15:20.217750",
+  "changes": [
+    "Removed event 'Lunch' (ID: 4mt564jt3t0ntucht27mgjiped) that was scheduled from 2025-10-26T12:00:00 to 2025-10-26T13:00:00."
+  ],
+  "suggestion": {
+    "start_time": "2025-10-26T12:00:00",
+    "end_time": "2025-10-26T13:00:00",
+    "title": "Pickleball",
+    "description": "Play pickleball to meet your weekly goal and increase your steps.",
+    "rationale": "You have a goal to play pickleball 3 days/week and have only played once. This will also help you reach your daily step goal."
+  }
+}
