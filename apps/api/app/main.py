@@ -1,33 +1,32 @@
+from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
 
 from app.dependencies.calendar import (
     createCalendarEvent,
-    createSampleEvent,
     getCalendarEvents,
     getTodayEvents,
 )
 from app.dependencies.langchain import create_ai_insights
+from app.dependencies.user_profile import (
+    create_user_profile,
+    get_user_profile,
+    update_user_profile,
+)
 from app.models.calendar import CreateEventRequest
-from app.utils.timestamp import parse_iso_timestamp
-from app.dependencies.langchain import create_ai_insights
 from app.utils.event_poller import event_poller
+from app.utils.timestamp import parse_iso_timestamp
 
-app = FastAPI()
 
-
-@app.on_event("startup")
-async def startup_event():
-    """Start the event poller on startup"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     await event_poller.start()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Stop the event poller on shutdown"""
+    yield
     await event_poller.stop()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
@@ -75,15 +74,6 @@ async def get_all_events(
         raise HTTPException(status_code=500, detail=f"Error getting events: {str(e)}")
 
 
-@app.get("/calendar/events/today")
-async def get_today_events():
-    try:
-        events = getTodayEvents()
-        return {"events": events, "count": len(events)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting events: {str(e)}")
-
-
 @app.post("/calendar/events")
 async def create_event(event_data: CreateEventRequest):
     """
@@ -92,21 +82,23 @@ async def create_event(event_data: CreateEventRequest):
     try:
         # Convert Pydantic models to dictionaries
         participants = (
-            [p.dict() for p in event_data.participants]
+            [p.model_dump() for p in event_data.participants]
             if event_data.participants
             else None
         )
         resources = (
-            [r.dict() for r in event_data.resources] if event_data.resources else None
+            [r.model_dump() for r in event_data.resources]
+            if event_data.resources
+            else None
         )
         conferencing = (
-            event_data.conferencing.dict() if event_data.conferencing else None
+            event_data.conferencing.model_dump() if event_data.conferencing else None
         )
 
         event = createCalendarEvent(
             title=event_data.title,
-            description=event_data.description,
-            location=event_data.location,
+            description=event_data.description or "",
+            location=event_data.location or "",
             start_time=event_data.start_time,
             end_time=event_data.end_time,
             start_timezone=event_data.start_timezone,
@@ -124,6 +116,31 @@ async def create_event(event_data: CreateEventRequest):
         raise HTTPException(status_code=500, detail=f"Error creating event: {str(e)}")
 
 
+@app.get("/calendar/events/today")
+async def get_today_events():
+    try:
+        events = getTodayEvents()
+        return {"events": events, "count": len(events)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting events: {str(e)}")
+
+
+@app.post("/users")
+async def create_profile(profile_data: dict):
+    return await create_user_profile(profile_data=profile_data)
+
+
 @app.get("/users/{user_id}")
-def read_user(user_id: str):
+async def read_profile(user_id: str):
+    return await get_user_profile(user_id=user_id)
+
+
+@app.put("/users/{user_id}")
+async def update_profile(user_id: str, profile_data: dict):
+    print("Received profile data:", profile_data)
+    return await update_user_profile(user_id=user_id, profile_data=profile_data)
+
+
+@app.get("/users/{user_id}/insights")
+async def read_user(user_id: str):
     return create_ai_insights(user_id=user_id)
